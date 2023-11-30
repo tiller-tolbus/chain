@@ -1,9 +1,9 @@
-:~  title+'mine'
-    info+'fixme'
-    color+0xff.4400
-    image+'https://freedom-club.sfo2.digitaloceanspaces.com/props/quartus/long-logo/ab_Quartus-05_only.png'
+:~  title+'Token'
+    info+'A bag of marbles for your monkey brain.'
+    color+0x00.44ff
+    image+''
     version+[0 0 1]
-    website+'https://dalten.org/'
-    license+'REKT'
-    site+/apps/mine
+    website+'https://urbit.org/'
+    license+'MIT'
+    site+/apps/token
 ==
