@@ -1,0 +1,9 @@
+:~  title+'mine'
+    info+'fixme'
+    color+0xff.4400
+    image+'https://freedom-club.sfo2.digitaloceanspaces.com/props/quartus/long-logo/ab_Quartus-05_only.png'
+    version+[0 0 1]
+    website+'https://dalten.org/'
+    license+'REKT'
+    site+/apps/mine
+==
