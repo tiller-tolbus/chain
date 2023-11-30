@@ -5,6 +5,8 @@
 - TX validator
 - etc.
 
+- NEXT STEP:  mint genesis block
+
 - [ ] pending TXN tracking
 
 questions:
