@@ -121,7 +121,14 @@
       %sire
     =.  ltid  +(ltid)
     =/  src  src.germ.axn
-    =/  =txn  [src=src.germ.axn tid=ltid met=met.germ.axn]
+    =/  =txn  
+      :*  
+        src=src.germ.axn
+        bid=bid.germ.axn
+        tim=now.bol
+        tid=ltid
+        act=act.germ.axn
+      ==
     =/  hash  (shax (jam txn))
     =/  new-cards=(list card)
       ;:  weld

@@ -11,21 +11,24 @@
       slsh=?               ::  whether this is a slash block
       ::  slash block must have empty txns
   ==
-::  proto transaction
+::  germ: proto-transaction
 +$  germ
   $:  src=@p
-      met=metadata
+      bid=@udtoken
+      act=chain-action
   ==
-+$  metadata
++$  chain-action
   $%  [%put des=@p amt=@udtoken bid=@udtoken]
-      [%bet bid=@udtoken]
-      [%lay bid=@udtoken]
+      %bet
+      %lay
   ==
 ::  base transaction
 +$  txn
   $:  src=@p
+      bid=@udtoken
+      tim=@da
       tid=@ud
-      met=metadata
+      met=chain-action
   ==
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
@@ -38,7 +41,10 @@
       blacklist=(map @p @da)
   ==
 ::
+::  seed: attestation of a pending txn
 +$  seed  [src=@p tid=@ud hax=@uvH]
+::
+::  agent actions
 ++  axn
   $%  [%sire =germ]  :: produce a local txn
       [%cast =seed]  :: receive a remote txn
