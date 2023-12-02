@@ -162,21 +162,24 @@
 ++  arvo
   |=  [wir=(pole knot) sig=sign-arvo]
   ^+  dat
-  ?+    sig  ~|(%bad-arvo-sign dat)
-      [%ames %tune *]
-    ?>  =([[=ship =path] roar=(unit roar:ames)] +>.sig)
-    =/  ship  `ship`-<.+>.sig
-    =/  path  `path`+<.+>.sig
-    =/  roar  `(unit roar:ames)`+.+>.sig
-    ?~  roar  dat
-    ?>  ?=([%token tsrc=@ ttid=@ ~] wir)
-    ?>  =(%token-txn p:(need q.dat.u.roar))
-    =/  itxn=txn  ;;(txn q:(need q.dat.u.roar))
-    =/  =seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
-    ?.  (~(has in pend) seed)
-      ~|(%bad-hash dat)
-    ::  valid TXN, promote to pending for chain
-    =.  pent  (~(put in pent) itxn)
-    dat
+  ?+    wir  ~|(%bad-wire dat)
+      [%token tsrc=@ ttid=@ ~]
+    ?+    sig  ~|(%bad-arvo-sign dat)
+        [%ames %tune *]
+      ::  remote scry request handler
+      =/  roar  roar.sig
+      ?~  roar  dat
+      ::  verify remote scry response is marked %token-txn
+      ?>  =(%token-txn p:(need q.dat.u.roar))
+      ::  itxn: incoming TXN
+      =/  itxn=txn  ;;(txn q:(need q.dat.u.roar))
+      =/  =seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
+      ::  verify itxn matches attested hash from seed
+      ?.  (~(has in pend) seed)
+        ~|(%bad-hash dat)
+      ::  valid TXN, promote to pending for chain
+      =.  pent  (~(put in pent) itxn)
+      dat
+    ==
   ==
 --
