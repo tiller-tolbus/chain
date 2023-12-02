@@ -1,6 +1,6 @@
 :~  title+'Token'
     info+'A bag of marbles for your monkey brain.'
-    color+0x00.44ff
+    color+0x44ff
     image+''
     version+[0 0 1]
     website+'https://urbit.org/'
