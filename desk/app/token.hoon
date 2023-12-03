@@ -132,13 +132,9 @@
     =.  ltid  +(ltid)
     =/  src  src.germ.axn
     =/  =txn  
-      :*  
-        src=src.germ.axn
-        bid=bid.germ.axn
-        tim=now.bol
+      :+  tim=now.bol
         tid=ltid
-        act=act.germ.axn
-      ==
+      germ.axn
     =/  hash  (shax (jam txn))
     =/  new-cards=(list card)
       ;:  weld

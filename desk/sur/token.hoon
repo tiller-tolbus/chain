@@ -12,7 +12,7 @@
       slsh=?               ::  whether this is a slash block
       ::  slash block must have empty txns
   ==   
-::  germ: proto-transaction
+::  germ: proto-transaction (user-entered values)
 +$  germ
   $:  src=@p
       bid=@udtoken
@@ -25,11 +25,9 @@
   ==
 ::  base transaction
 +$  txn
-  $:  src=@p
-      bid=@udtoken
-      tim=@da
+  $:  tim=@da
       tid=@ud
-      met=chain-action
+      germ
   ==
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
