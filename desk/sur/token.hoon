@@ -1,16 +1,17 @@
 |%
 ::  blockchain defs
 +$  chain  (list block)
-+$  block
++$  block  [hash=@uvH stone]  ::  [(shax (jam stone)) stone]
+::  stone: unhashed block
++$  stone
   $:  hght=@ud             ::  block height
       prev=@uvH            ::  parent block hash of (previous) txns
-      hash=@uvH            ::  block hash of (current) txns
       stmp=@da             ::  timestamp (deterministic in case of slash)
       txns=(list txn)      ::  block size is arbitrary
       mint=@p              ::  minter address
       slsh=?               ::  whether this is a slash block
       ::  slash block must have empty txns
-  ==
+  ==   
 ::  germ: proto-transaction
 +$  germ
   $:  src=@p
@@ -46,7 +47,9 @@
 ::
 ::  agent actions
 ++  axn
-  $%  [%sire =germ]  :: produce a local txn
-      [%cast =seed]  :: receive a remote txn
+  $%  
+    [%sire =germ]  :: produce a local txn
+    [%cast =seed]  :: receive a remote txn  
+    [%born ~]  :: mint genesis block
   ==
 --

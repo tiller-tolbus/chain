@@ -103,7 +103,17 @@
 ::
 ++  init
   ^+  dat
-  dat
+  ::
+  ::  bootstrap shared-state
+  ::  there is good reason to include this mechanic at a protocol level
+  ::  but these specific values are for prototyping only
+  =+  ^-  shared-state
+    :*
+      ledger=(molt ~[[our.bol 1.000.000]])
+      validators=~[our.bol]
+      blacklist=~
+    ==
+  dat(shared -)
 ::
 ++  load
   |=  vaz=vase
@@ -164,6 +174,20 @@
       ==  ==
     =.  pend  (~(put in pend) seed)
     (emil new-cards)
+    ::
+    :: mint a genesis block
+      %born
+    ?>  =(~ chain)
+    =/  =stone
+      :*  hght=0
+          prev=(shax ~)
+          stmp=now.bol
+          txns=~
+          mint=our.bol
+          slsh=%.n
+      ==
+    =.  chain  ~[[(shax (jam stone)) stone]]
+    dat
   ==
 ::
 ++  arvo
