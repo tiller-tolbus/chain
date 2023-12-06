@@ -98,7 +98,7 @@
 |_  [bol=bowl:gall dek=(list card)]
 +*  dat  .
 ++  emit  |=(=card dat(dek [card dek]))
-++  emil  |=(lac=(list card) dat(dek (welp lac dek)))
+++  emil  |=(lac=(list card) dat(dek (welp (flop lac) dek)))
 ++  abet  ^-((quip card _state) [(flop dek) state])
 ::
 ++  init
