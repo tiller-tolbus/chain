@@ -17,7 +17,7 @@
 ::  shared-state: total state derivable from chain
 +$  shared-state
   $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
-      validators=(list @p)      ::  eligible validators for election
+      validators=(set @p)      ::  eligible validators for election
       blacklist=(map @p @da)    ::  slashed validators in timeout
   ==
 ::  txn: verifiable modification of shared-state
@@ -42,11 +42,29 @@
 ::  
 ::  Part 2: Protocol Configuration
 ::
+::  max number of transactions per block
+++  max-txns  `@ud`1.024
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
 ::  scale factor for tokens
 ++  token-scale  `@ud`(pow 2 32)
-::  ADD: txns size, txt field size
+::  max character length of txt field in txn
+++  max-txt-chars  `@ud`256
+::  initial shared-state, including airdrop to stars
+++  bootstrap-state
+  ^-  shared-state  :+  
+  ::  ledger: initial airdrop to stars
+  ^-  (map @p @udtoken)  
+  %-  molt
+  %+  turn  (gulf ~marzod ~fipfes)
+    |=  p=@
+    ^-  [@p @udtoken]
+    [p (bex 16)]
+  ::  validators: nodes that will bootstrap the network
+  ^-  (set @p)
+  (silt ~[~woldeg ~tagbel])  :: TODO: find more stars to participate
+  ::  blacklist: stars in time-out (initially empty)
+  ^-  (map @p @da)  ~
 ::
 ::  Part 3: Implementation-Specific Types
 ::
@@ -56,7 +74,7 @@
 ::  Part 4: Agent Actions
 +$  token-action
   $%  
-    [%bootstrap ~]               :: mint genesis block
+    [%bootstrap ~]          :: mint genesis block
     [%submit-txn =txn-data]      :: send txn to agent from client
     [%send-txn =txn-seed]        :: send txn to validators from agent
   ==

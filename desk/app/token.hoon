@@ -105,15 +105,7 @@
   ^+  dat
   ::
   ::  bootstrap shared-state
-  ::  there is good reason to include this mechanic at a protocol level
-  ::  but these specific values are for prototyping only
-  =+  ^-  shared-state
-    :*
-      ledger=(molt ~[[our.bol 1.000.000]])
-      validators=~[our.bol]
-      blacklist=~
-    ==
-  dat(shared -)
+  dat(shared bootstrap-state)
 ::
 ++  load
   |=  vaz=vase
@@ -150,7 +142,7 @@
       ::  validator notification
       =/  cag  [%noun !>([src=our.bol tid=ltid hax=hash])]
       ^-  (list card)
-      %+  turn  validators.shared
+      %+  turn  ~(tap in validators.shared)
         |=  val=@p
         [%pass /token/(scot %ud ltid)/(scot %p val) %agent [val %token] %poke cag]
       ==
