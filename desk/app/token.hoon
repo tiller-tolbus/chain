@@ -32,101 +32,42 @@
 ::
 ^-  agent:gall
 ::
-=<
-  |_  =bowl:gall
-  +*  this  .
-      def   ~(. (default-agent this %|) bowl)
-      eng   ~(. +> [bowl ~])
-  ++  on-init
-    ^-  (quip card _this)
-    ~>  %bout.[0 '%token +on-init']
-    =^  cards  state  abet:init:eng
-    [cards this]
-  ::
-  ++  on-save
-    ^-  vase
-    ~>  %bout.[0 '%token +on-save']
-    !>(state)
-  ::
-  ++  on-load
-    |=  ole=vase
-    ~>  %bout.[0 '%token +on-load']
-    ^-  (quip card _this)
-    =^  cards  state  abet:(load:eng ole)
-    [cards this]
-  ::
-  ++  on-poke
-    |=  cag=cage
-    ~>  %bout.[0 '%token +on-poke']
-    ^-  (quip card _this)
-    =^  cards  state  abet:(poke:eng cag)
-    [cards this]
-  ::
-  ++  on-peek
-    |=  pat=path
-    ~>  %bout.[0 '%token +on-peek']
-    ^-  (unit (unit cage))
-    [~ ~]
-  ::
-  ++  on-agent
-    |=  [wir=wire sig=sign:agent:gall]
-    ~>  %bout.[0 '%token +on-agent']
-    ^-  (quip card _this)
-    `this
-  ::
-  ++  on-arvo
-    |=  [wir=wire sig=sign-arvo]
-    ~>  %bout.[0 '%token +on-arvo']
-    ^-  (quip card _this)
-    =^  cards  state  abet:(arvo:eng wir sig)
-    [cards this]
-  ::
-  ++  on-watch
-    |=  pat=path
-    ~>  %bout.[0 '%token +on-watch']
-    ^-  (quip card _this)
-    `this
-  ::
-  ++  on-fail
-    ~>  %bout.[0 '%token +on-fail']
-    on-fail:def
-  ::
-  ++  on-leave
-    ~>  %bout.[0 '%token +on-leave']
-    on-leave:def
-  --
-|_  [bol=bowl:gall dek=(list card)]
-+*  dat  .
-++  emit  |=(=card dat(dek [card dek]))
-++  emil  |=(lac=(list card) dat(dek (welp (flop lac) dek)))
-++  abet  ^-((quip card _state) [(flop dek) state])
+|_  =bowl:gall
++*  this  .
+    def   ~(. (default-agent this %|) bowl)
+++  on-init
+  ^-  (quip card _this)
+  ~>  %bout.[0 '%token +on-init']
+  `this(shared bootstrap-state)
 ::
-++  init
-  ^+  dat
-  ::
-  ::  bootstrap shared-state
-  dat(shared bootstrap-state)
+++  on-save
+  ^-  vase
+  ~>  %bout.[0 '%token +on-save']
+  !>(state)
 ::
-++  load
-  |=  vaz=vase
-  ^+  dat
-  ?>  ?=([%zero *] q.vaz)
-  dat(state !<(state-zero vaz))
+++  on-load
+  |=  =vase
+  ~>  %bout.[0 '%token +on-load']
+  ^-  (quip card _this)
+  ?>  ?=([%zero *] q.vase)
+  `this(state !<(state-zero vase))
 ::
-++  poke
-  |=  [mar=mark vaz=vase]
-  ^+  dat
-  :: ?>  ?=(%token-action mar)
-  =/  axn=token-action  !<(token-action vaz)
-  ?-    -.axn
-    :: create a txn locally and send it
+++  on-poke
+  |=  [=mark =vase]
+  ~>  %bout.[0 '%token +on-poke']
+  ^-  (quip card _this)
+  ::  add: assert on mark
+  =/  action  !<(token-action vase)
+  ?-  -.action
+    ::
+    ::  receive txn from client
       %submit-txn
     =.  ltid  +(ltid)
-    =/  src  src.txn-data.axn
+    =/  src  src.txn-data.action
     =/  =txn  
-      :+  tim=now.bol
+      :+  tim=now.bowl
         tid=ltid
-      txn-data.axn
+      txn-data.action
     =/  hash  (shax (jam txn))
     =/  new-cards=(list card)
       ;:  weld
@@ -140,18 +81,18 @@
               [%noun txn]
       ==  ==
       ::  validator notification
-      =/  cag  [%noun !>([src=our.bol tid=ltid hax=hash])]
+      =/  cag  [%noun !>([src=our.bowl tid=ltid hax=hash])]
       ^-  (list card)
       %+  turn  ~(tap in validators.shared)
         |=  val=@p
         [%pass /token/(scot %ud ltid)/(scot %p val) %agent [val %token] %poke cag]
       ==
-    (emil new-cards)
+    [new-cards this]
     ::
-    :: receive a remote txn and verify
+    ::   receive a remote txn
       %send-txn
     ::  /token/[src]/txn/[tid]
-    =/  txn-seed  `txn-seed`+.axn
+    =/  txn-seed  txn-seed.action
     =/  new-cards=(list card)
       :~  :*  %pass
               /token/(scot %p src.txn-seed)/(scot %ud tid.txn-seed)
@@ -161,7 +102,7 @@
               /g/x/0/token/txn/(scot %ud tid.txn-seed)
       ==  ==
     =.  pend  (~(put in pend) txn-seed)
-    (emil new-cards)
+    [new-cards this]
     ::
     :: mint a genesis block
       %bootstrap
@@ -169,25 +110,38 @@
     =/  =block-data
       :*  hght=0
           prev=(shax ~)
-          stmp=now.bol
-          mint=our.bol
+          stmp=now.bowl
+          mint=our.bowl
           slsh=%.n
           txns=~
       ==
     =.  chain  ~[[(shax (jam block-data)) block-data]]
-    dat
-  ==
+    `this
+  == 
 ::
-++  arvo
-  |=  [wir=(pole knot) sig=sign-arvo]
-  ^+  dat
-  ?+    wir  ~|(%bad-wire dat)
+++  on-peek
+  |=  pat=path
+  ~>  %bout.[0 '%token +on-peek']
+  ^-  (unit (unit cage))
+  [~ ~]
+::
+++  on-agent
+  |=  [wir=wire sig=sign:agent:gall]
+  ~>  %bout.[0 '%token +on-agent']
+  ^-  (quip card _this)
+  `this
+::
+++  on-arvo
+  |=  [=wire sign=sign-arvo]
+  ~>  %bout.[0 '%token +on-arvo']
+  ^-  (quip card _this)
+  ?+    wire  ~|(%bad-wire !!)
       [%token tsrc=@ ttid=@ ~]
-    ?+    sig  ~|(%bad-arvo-sign dat)
+    ?+    sign  ~|(%bad-arvo-sign !!)
         [%ames %tune *]
       ::  remote scry request handler
-      =/  roar  roar.sig
-      ?~  roar  dat
+      =/  roar  roar.sign
+      ?~  roar  ~|(%empty-roar !!)
       ::  verify remote scry response is marked %token-txn
       ?>  =(%noun p:(need q.dat.u.roar))
       ::  itxn: incoming TXN
@@ -195,10 +149,24 @@
       =/  =txn-seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
       ::  verify itxn matches attested hash from txn-seed
       ?.  (~(has in pend) txn-seed)
-        ~|(%bad-hash dat)
+        ~|(%bad-hash !!)
       ::  valid TXN, promote to pending for chain
       =.  pent  (~(put in pent) itxn)
-      dat
+      `this
     ==
   ==
+::
+++  on-watch
+  |=  pat=path
+  ~>  %bout.[0 '%token +on-watch']
+  ^-  (quip card _this)
+  `this
+::
+++  on-fail
+  ~>  %bout.[0 '%token +on-fail']
+  on-fail:def
+::
+++  on-leave
+  ~>  %bout.[0 '%token +on-leave']
+  on-leave:def
 --
