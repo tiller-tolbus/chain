@@ -1,53 +1,63 @@
 |%
-::  blockchain defs
+::
+::    Part 1: Essential Blockchain Types
+::    
 +$  chain  (list block)
-+$  block  [hash=@uvH stone]  ::  [(shax (jam stone)) stone]
-::  stone: unhashed block
-+$  stone
-  $:  hght=@ud             ::  block height
-      prev=@uvH            ::  parent block hash of (previous) txns
++$  block  [hash=@uvH block-data]
+::  block-data: data fields hashed at the head of the block
++$  block-data
+  $:  
+      hght=@ud             ::  block height
+      prev=@uvH            ::  parent block hash
       stmp=@da             ::  timestamp (deterministic in case of slash)
-      txns=(list txn)      ::  block size is arbitrary
       mint=@p              ::  minter address
-      slsh=?               ::  whether this is a slash block
-      ::  slash block must have empty txns
-  ==   
-::  germ: proto-transaction (user-entered values)
-+$  germ
-  $:  src=@p
-      bid=@udtoken
-      act=chain-action
+      slsh=?               ::  whether to slash mint
+      txns=(list txn)      ::  all transactions (size enforced by protocol)
   ==
-+$  chain-action
-  $%  [%put des=@p amt=@udtoken bid=@udtoken]
-      %bet
-      %lay
+::  shared-state: total state derivable from chain
++$  shared-state
+  $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
+      validators=(list @p)      ::  eligible validators for election
+      blacklist=(map @p @da)    ::  slashed validators in timeout
   ==
-::  base transaction
+::  txn: verifiable modification of shared-state
 +$  txn
-  $:  tim=@da
-      tid=@ud
-      germ
+  $:  tim=@da              ::  timestamp
+      tid=@ud              ::  transaction ID per-ship (nonce)
+      txn-data
   ==
+::  txn-data: user-entered data to process into full txn
++$  txn-data
+  $:  src=@p               ::  who is transacting
+      bid=@udtoken         ::  claimable by validator for inclusion in a block
+      txt=@t               ::  arbitrary metadata (max size enforced by protocol)
+      act=chain-action     ::  modification of shared-state
+  ==
+::  chain-action: modification of shared-state
++$  chain-action
+  $%  [%deposit des=@p amt=@udtoken bid=@udtoken]
+      [%join ~]
+      [%leave ~]
+  ==
+::  
+::  Part 2: Protocol Configuration
+::
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
-::  scale factor for tokens  XX revisit this
+::  scale factor for tokens
 ++  token-scale  `@ud`(pow 2 32)
+::  ADD: txns size, txt field size
 ::
-+$  shared-state
-  $:  ledger=(map @p @udtoken)
-      validators=(list @p)      ::  round-robin of validator addresses
-      blacklist=(map @p @da)
-  ==
+::  Part 3: Implementation-Specific Types
 ::
-::  seed: attestation of a pending txn
-+$  seed  [src=@p tid=@ud hax=@uvH]
+::  txn-seed: attestation of a pending txn
++$  txn-seed  [src=@p tid=@ud hax=@uvH]
 ::
-::  agent actions
-++  axn
+::  Part 4: Agent Actions
++$  token-action
   $%  
-    [%sire =germ]  :: produce a local txn
-    [%cast =seed]  :: receive a remote txn  
-    [%born ~]  :: mint genesis block
+    [%bootstrap ~]               :: mint genesis block
+    [%submit-txn =txn-data]      :: send txn to agent from client
+    [%send-txn =txn-seed]        :: send txn to validators from agent
   ==
 --

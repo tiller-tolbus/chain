@@ -10,7 +10,7 @@
 +$  state-zero
   $:  %zero
       =chain
-      pend=(set seed)    :: unverified, unauthenticated
+      pend=(set txn-seed)    :: unverified, unauthenticated
       pent=(set txn)     :: cryptographically verified but unauthenticated
       full=?             :: flag for full node vs. lite node
       want=?             :: intent to be validator, should sync w/ global
@@ -124,17 +124,17 @@
 ++  poke
   |=  [mar=mark vaz=vase]
   ^+  dat
-  ?>  ?=(%token-axn mar)
-  =/  =axn  !<(axn vaz)
+  :: ?>  ?=(%token-action mar)
+  =/  axn=token-action  !<(token-action vaz)
   ?-    -.axn
     :: create a txn locally and send it
-      %sire
+      %submit-txn
     =.  ltid  +(ltid)
-    =/  src  src.germ.axn
+    =/  src  src.txn-data.axn
     =/  =txn  
       :+  tim=now.bol
         tid=ltid
-      germ.axn
+      txn-data.axn
     =/  hash  (shax (jam txn))
     =/  new-cards=(list card)
       ;:  weld
@@ -145,10 +145,10 @@
               /token/(scot %p src)/(scot %ud ltid)
               %grow
               /txn/(scot %ud ltid)
-              [%token-txn txn]
+              [%noun txn]
       ==  ==
       ::  validator notification
-      =/  cag  [%token-cast !>([src=our.bol tid=ltid hax=hash])]
+      =/  cag  [%noun !>([src=our.bol tid=ltid hax=hash])]
       ^-  (list card)
       %+  turn  validators.shared
         |=  val=@p
@@ -157,32 +157,32 @@
     (emil new-cards)
     ::
     :: receive a remote txn and verify
-      %cast
+      %send-txn
     ::  /token/[src]/txn/[tid]
-    =/  seed  `seed`+.axn
+    =/  txn-seed  `txn-seed`+.axn
     =/  new-cards=(list card)
       :~  :*  %pass
-              /token/(scot %p src.seed)/(scot %ud tid.seed)
+              /token/(scot %p src.txn-seed)/(scot %ud tid.txn-seed)
               %arvo  %a  %keen
-              src.seed
+              src.txn-seed
               :: this should always be to the first binding
-              /g/x/0/token/txn/(scot %ud tid.seed)
+              /g/x/0/token/txn/(scot %ud tid.txn-seed)
       ==  ==
-    =.  pend  (~(put in pend) seed)
+    =.  pend  (~(put in pend) txn-seed)
     (emil new-cards)
     ::
     :: mint a genesis block
-      %born
+      %bootstrap
     ?>  =(~ chain)
-    =/  =stone
+    =/  =block-data
       :*  hght=0
           prev=(shax ~)
           stmp=now.bol
-          txns=~
           mint=our.bol
           slsh=%.n
+          txns=~
       ==
-    =.  chain  ~[[(shax (jam stone)) stone]]
+    =.  chain  ~[[(shax (jam block-data)) block-data]]
     dat
   ==
 ::
@@ -197,12 +197,12 @@
       =/  roar  roar.sig
       ?~  roar  dat
       ::  verify remote scry response is marked %token-txn
-      ?>  =(%token-txn p:(need q.dat.u.roar))
+      ?>  =(%noun p:(need q.dat.u.roar))
       ::  itxn: incoming TXN
       =/  itxn=txn  ;;(txn q:(need q.dat.u.roar))
-      =/  =seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
-      ::  verify itxn matches attested hash from seed
-      ?.  (~(has in pend) seed)
+      =/  =txn-seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
+      ::  verify itxn matches attested hash from txn-seed
+      ?.  (~(has in pend) txn-seed)
         ~|(%bad-hash dat)
       ::  valid TXN, promote to pending for chain
       =.  pent  (~(put in pent) itxn)
