@@ -3,11 +3,10 @@
 ::    Part 1: Essential Blockchain Types
 ::    
 +$  chain  (list block)
-+$  block  [hash=@uvH block-data]
++$  block  [sign=@uvH hash=@uvH block-data]
 ::  block-data: data fields hashed at the head of the block
 +$  block-data
-  $:  
-      hght=@ud             ::  block height
+  $:  hght=@ud             ::  block height
       prev=@uvH            ::  parent block hash
       stmp=@da             ::  timestamp (deterministic in case of slash)
       mint=@p              ::  minter address
@@ -22,7 +21,8 @@
   ==
 ::  txn: verifiable modification of shared-state
 +$  txn
-  $:  tim=@da              ::  timestamp
+  $:  sig=@uvH             ::  signature
+      tim=@da              ::  timestamp
       tid=@ud              ::  transaction ID per-ship (nonce)
       txn-data
   ==
@@ -46,7 +46,7 @@
 ++  max-txns  `@ud`1.024
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
-::  scale factor for tokens
+::  num yarvs per token
 ++  token-scale  `@ud`(pow 2 32)
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
@@ -59,10 +59,10 @@
   %+  turn  (gulf ~marzod ~fipfes)
     |=  p=@
     ^-  [@p @udtoken]
-    [p (bex 16)]
-  ::  validators: nodes that will bootstrap the network
+    [p (mul (bex 16) token-scale)]
+  ::  validators: genesis block author
   ^-  (set @p)
-  (silt ~[~woldeg ~tagbel])  :: TODO: find more stars to participate
+  (silt ~[~woldeg])  
   ::  blacklist: stars in time-out (initially empty)
   ^-  (map @p @da)  ~
 ::
