@@ -1,5 +1,10 @@
 #   `%token`
 
+%pki-store
+- parse azimuith diffs
+- subscription interface
+- roundtrip block/txn signatures
+
 - TX structure
 - TX collector
 - TX validator

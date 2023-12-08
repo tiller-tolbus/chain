@@ -1,4 +1,4 @@
-/-  pki-store,
+/-  *pki-store,
     dice
 /+  dbug,
     default-agent,
@@ -10,9 +10,9 @@
 ::
 +$  state-zero
   $:  %zero
-      =logs:pki-store
+      =logs
       =points:points:naive
-      =store:pki-store
+      =store
   ==
 +$  card  card:agent:gall
 +$  sign  sign:agent:gall
@@ -71,9 +71,28 @@
     (on-agent:def wire sign)
   ?+  p.cage.sign  (on-agent:def wire sign)
       %naive-state
-    =+  !<([s=^state:naive owners:dice sponsors:dice] q.cage.sign)
+    =/  snapshot  !<([=^state:naive * *] q.cage.sign)
+    =/  points  points:state:snapshot
+    =/  pairs=(list [=ship =point:naive])  ~(tap by points)
+    =|  store=(mip ship [life rift] pass)
+    =/  store
+    |-
+    ^+  store
+    ?~  pairs  store
+    =/  pair=[=ship =point:naive]  i.pairs
+    =/  =life  life.keys.net.point.pair
+    =/  =rift  rift.net.point.pair
+    ::  if crypt.keys doesn't work, try auth.keys
+    =/  =pass  crypt.keys.net.point.pair
+    %=  $
+      pairs  t.pairs
+      store  (~(put bi store) ship.pair [life rift] pass)
+    ==
+    ::%+  turn  ships
+    ::|=  [ship point:naive]
+    ::^-  store ::  (mip ship [life rift] pass)
     ::  TODO: parse state into store
-    `this(points points:s)
+    `this(points points, store store)
       %naive-diffs
     =/  naive-diff  !<(diff:naive q.cage.sign)
     ::  TODO: parse diff into store
