@@ -22,12 +22,16 @@
 ::  txn: verifiable modification of shared-state
 +$  txn
   $:  sig=@uvH             ::  signature
-      tim=@da              ::  timestamp
-      tid=@ud              ::  transaction ID per-ship (nonce)
-      txn-data
+      txn-data 
   ==
-::  txn-data: user-entered data to process into full txn
+::  txn-data: txn data that gets signed
 +$  txn-data
+  $:  tim=@da              ::  timestamp
+      tid=@ud              ::  transaction ID per-ship (nonce)
+      txn-data-user
+  ==
+::  txn-data-user: user-entered data to process into full txn
++$  txn-data-user
   $:  src=@p               ::  who is transacting
       bid=@udtoken         ::  claimable by validator for inclusion in a block
       txt=@t               ::  arbitrary metadata (max size enforced by protocol)
@@ -75,7 +79,7 @@
 +$  token-action
   $%  
     [%bootstrap ~]          :: mint genesis block
-    [%submit-txn =txn-data]      :: send txn to agent from client
-    [%send-txn =txn-seed]        :: send txn to validators from agent
+    [%local-txn =txn-data-user]      :: send txn to agent from client
+    [%remote-txn =txn]        :: send txn to validators from agent
   ==
 --

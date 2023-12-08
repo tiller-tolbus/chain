@@ -10,13 +10,9 @@
 +$  state-zero
   $:  %zero
       =chain
-      pend=(set txn-seed)    :: unverified, unauthenticated
-      pent=(set txn)     :: cryptographically verified but unauthenticated
-      full=?             :: flag for full node vs. lite node
-      want=?             :: intent to be validator, should sync w/ global
-      boot=@p            :: bootstrap node for chain state  XX default
+      keys=acru:ames
+      pend=(set txn)     :: cryptographically verified but unauthenticated
       ltid=@ud           :: last used txn id
-      :: ktid=(map @p @ud)  :: courtesy cache of known nonces for breaches (or Pine solves?)
       shared=shared-state
   ==
 ::
@@ -38,7 +34,12 @@
 ++  on-init
   ^-  (quip card _this)
   ~>  %bout.[0 '%token +on-init']
-  `this(shared bootstrap-state)
+  :-
+  ::  subscribe to private keys from jael
+  :~  [%pass /token/jael/private-keys %arvo %j %private-keys ~]
+  ==
+  ::  bootstrap shared state
+  this(shared bootstrap-state)
 ::
 ++  on-save
   ^-  vase
@@ -61,53 +62,33 @@
   ?-  -.action
     ::
     ::  receive txn from client
-      %submit-txn
+      %local-txn
     =.  ltid  +(ltid)
-    =/  src  src.txn-data.action
-    =/  =txn  
+    =/  src  src.txn-data-user.action
+    =/  =txn-data
       :+  tim=now.bowl
         tid=ltid
-      txn-data.action
-    =/  hash  (shax (jam txn))
+      txn-data-user.action
+    =/  =txn  [(sign:as:keys (jam txn-data)) txn-data]
     =/  new-cards=(list card)
-      ;:  weld
-      ::  commit to local scry namespace
-      ::  XX after NDN pass it around
-      ^-  (list card)
-      :~  :*  %pass
-              /token/(scot %p src)/(scot %ud ltid)
-              %grow
-              /txn/(scot %ud ltid)
-              [%noun txn]
-      ==  ==
-      ::  validator notification
-      =/  cag  [%noun !>([src=our.bowl tid=ltid hax=hash])]
+      :: validator notification
+      :: TODO: use real marks
+      =/  =cage  [%noun !>(txn)]
       ^-  (list card)
       %+  turn  ~(tap in validators.shared)
-        |=  val=@p
-        [%pass /token/(scot %ud ltid)/(scot %p val) %agent [val %token] %poke cag]
-      ==
+      |=  val=@p
+      [%pass /token/remote-txn/(scot %ud tid.txn) %agent [val %token] %poke cage]
     [new-cards this]
     ::
     ::   receive a remote txn
-      %send-txn
-    ::  /token/[src]/txn/[tid]
-    =/  txn-seed  txn-seed.action
-    =/  new-cards=(list card)
-      :~  :*  %pass
-              /token/(scot %p src.txn-seed)/(scot %ud tid.txn-seed)
-              %arvo  %a  %keen
-              src.txn-seed
-              :: this should always be to the first binding
-              /g/x/0/token/txn/(scot %ud tid.txn-seed)
-      ==  ==
-    =.  pend  (~(put in pend) txn-seed)
-    [new-cards this]
+      %remote-txn
+    ::  when we have pubkeys, check signature
+    =.  pend  (~(put by pend) txn.action)
+    [~ this]
     ::
-    :: mint a genesis block
       %bootstrap
     ?>  =(~ chain)
-    =/  =block-data
+    =/  genesis=block-data
       :*  hght=0
           prev=(shax ~)
           stmp=now.bowl
@@ -115,8 +96,10 @@
           slsh=%.n
           txns=~
       ==
-    =.  chain  ~[[(shax (jam block-data)) block-data]]
-    `this
+    =/  hashed-block=[@uvH block-data]  [(shax (jam genesis)) genesis]
+    =/  signed-block  ;;([@ @] (cue (sign:as:keys (jam hashed-block))))
+    =/  block  ;;(block [-.signed-block (cue +.signed-block)])
+    `this(chain ~[block])
   == 
 ::
 ++  on-peek
@@ -136,24 +119,31 @@
   ~>  %bout.[0 '%token +on-arvo']
   ^-  (quip card _this)
   ?+    wire  ~|(%bad-wire !!)
-      [%token tsrc=@ ttid=@ ~]
-    ?+    sign  ~|(%bad-arvo-sign !!)
-        [%ames %tune *]
-      ::  remote scry request handler
-      =/  roar  roar.sign
-      ?~  roar  ~|(%empty-roar !!)
-      ::  verify remote scry response is marked %token-txn
-      ?>  =(%noun p:(need q.dat.u.roar))
-      ::  itxn: incoming TXN
-      =/  itxn=txn  ;;(txn q:(need q.dat.u.roar))
-      =/  =txn-seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
-      ::  verify itxn matches attested hash from txn-seed
-      ?.  (~(has in pend) txn-seed)
-        ~|(%bad-hash !!)
-      ::  valid TXN, promote to pending for chain
-      =.  pent  (~(put in pent) itxn)
-      `this
-    ==
+    ::   [%token tsrc=@ ttid=@ ~]
+    :: ?+    sign  ~|(%bad-arvo-sign !!)
+    ::     [%ames %tune *]
+    ::   ::  remote scry request handler
+    ::   =/  roar  roar.sign
+    ::   ?~  roar  ~|(%empty-roar !!)
+    ::   ::  verify remote scry response is marked %token-txn
+    ::   ?>  =(%noun p:(need q.dat.u.roar))
+    ::   ::  itxn: incoming TXN
+    ::   =/  itxn=txn  ;;(txn q:(need q.dat.u.roar))
+    ::   =/  =txn-seed  [src=src.itxn tid=tid.itxn hax=(shax (jam itxn))]
+    ::   ::  verify itxn matches attested hash from txn-seed
+    ::   ?.  (~(has in pend) txn-seed)
+    ::     ~|(%bad-hash !!)
+    ::   ::  valid TXN, promote to pending for chain
+    ::   =.  pend  (~(put in pend) itxn)
+    ::   `this
+    :: ==
+    ::
+      [%token %jael %private-keys ~]
+    ?>  ?=([%jael %private-keys *] sign)
+    =/  life  life.sign
+    =/  vein  vein.sign
+    =/  private-key=ring  (~(got by vein) life)
+    `this(keys (nol:nu:crub:crypto private-key))
   ==
 ::
 ++  on-watch
