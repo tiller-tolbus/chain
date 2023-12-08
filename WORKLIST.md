@@ -5,9 +5,9 @@
 - TX validator
 - etc.
 
-- NEXT STEP:  mint genesis block
 
 - [ ] pending TXN tracking
+- gates for signing txns, signing/hashing blocks
 
 questions:
 - assert on path resolution?

@@ -1,0 +1,6 @@
+- Jael should keep a key revision history for me so I don't need to build %pki-store
+- Jael should sign things for me so I don't have to store private keys in my state
+- Crub is basically impossible to use in anger without reading the code, which is opaque
+
+less relevant:
+- Hoon should recognize that I made a recursive type instead of just looping and crashing
