@@ -25,6 +25,7 @@
 +*  this  .
     def   ~(. (default-agent this %|) bowl)
 ++  on-init
+  ~>  %bout.[0 '%pki-store +on-init']
   ^-  (quip card _this)
   :_  this
   :~  [%pass /pki-store %agent [our.bowl %azimuth] %watch /event]
@@ -46,11 +47,15 @@
   !!
 ::
 ++  on-watch
-  |=  path
+  |=  =path
+  ~>  %bout.[0 '%pki-store +on-watch']
+  ~&  path
   ^-  (quip card _this)
   ::  this is the only valid path
   ?>  =(path /pki-diffs)
-  [~ this]
+  :_  this
+  :~  [%give %fact ~[/pki-diffs] %pki-snapshot !>(pki-store)]
+  ==
 ::
 ++  on-leave
   |=  path
@@ -64,6 +69,8 @@
 ::
 ++  on-agent
   |=  [=wire =sign]
+  ~>  %bout.[0 '%pki-store %on-agent']
+  ~&  [wire -.sign]
   ^-  (quip card _this)
   ?.  ?=([%pki-store ~] wire)
     (on-agent:def wire sign)
@@ -74,11 +81,9 @@
     :~  [%pass /pki-store %agent [our.bowl %azimuth] %watch /event]
     ==
       %watch-ack
-    ~&  ["watch-ack" wire sign]
     [~ this]
       ::
       %fact
-    ~&  ["on-agent hit" -.sign p.cage.sign]
     ?+  p.cage.sign  (on-agent:def wire sign)
         ::
         %naive-state
@@ -105,13 +110,10 @@
       ==
         ::
         %naive-diffs
-      ~&  ["%naive-diffs hit" sign]
       =/  diff  !<(diff:naive q.cage.sign)
-      ~&  ["diff" diff]
       ?.  ?=([%point =ship %keys =keys:naive] diff)
         [~ this]
       =/  =pki-entry  [ship.diff life.keys.diff crypt.keys.diff]
-      ~&  ["azimuth update" -]
       =+  pki-entry
       :_  this(pki-store (~(put bi pki-store) ship life pass))
       :~  [%give %fact ~[/pki-diffs] %pki-diff !>(pki-entry)]
@@ -120,12 +122,12 @@
   ==
 ::
 ++  on-arvo
-  |=  [wire =sign-arvo]
+  |=  [=wire =sign-arvo]
   ^-  (quip card _this)
   !!
 ::
 ++  on-fail
-  |=  [term tang]
+  |=  [=term =tang]
   ^-  (quip card _this)
   ~&  [term tang]
   !!

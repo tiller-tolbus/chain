@@ -60,9 +60,11 @@
 ++  on-poke
   |=  [=mark =vase]
   ~>  %bout.[0 '%token +on-poke']
+  ~&  mark
   ^-  (quip card _this)
   ::  add: assert on mark
   =/  action  !<(token-action vase)
+  ~&  -.action
   ?-  -.action
     ::
     ::  receive txn from client
@@ -115,6 +117,7 @@
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ~>  %bout.[0 '%token +on-agent']
+  ~&  [wire -.sign]
   ^-  (quip card _this)
   ::  only valid wire is pki-diffs
   ?+  wire  ~&([%bad-wire wire] !!)
@@ -149,6 +152,7 @@
 ++  on-arvo
   |=  [=wire sign=sign-arvo]
   ~>  %bout.[0 '%token +on-arvo']
+  ~&  [wire -.sign -.+.sign]
   ^-  (quip card _this)
   ?+    wire  ~|(%bad-wire !!)
     ::   [%token tsrc=@ ttid=@ ~]
