@@ -6,18 +6,19 @@
 +$  block  [sign=@uvH hash=@uvH block-data]
 ::  block-data: data fields hashed at the head of the block
 +$  block-data
-  $:  hght=@ud             ::  block height
-      prev=@uvH            ::  parent block hash
-      stmp=@da             ::  timestamp (deterministic in case of slash)
+  $:  stmp=@da             ::  timestamp (deterministic in case of slash)
       mint=@p              ::  minter address
+      hght=@ud             ::  block height
+      prev=@uvH            ::  parent block hash
       slsh=?               ::  whether to slash mint
+      text=@t              ::  256-char arbitrary metadata
       txns=(list txn)      ::  all transactions (size enforced by protocol)
   ==
 ::  shared-state: total state derivable from chain
 +$  shared-state
   $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
       validators=(set @p)      ::  eligible validators for election
-      blacklist=(map @p @da)    ::  slashed validators in timeout
+      blacklist=(map @p @ud)    ::  slashed validators in timeout
   ==
 ::  txn: verifiable modification of shared-state
 +$  txn
@@ -39,18 +40,18 @@
   ==
 ::  chain-action: modification of shared-state
 +$  chain-action
-  $%  [%deposit des=@p amt=@udtoken bid=@udtoken]
-      [%join ~]
-      [%leave ~]
+  $%  [%spend des=@p amt=@udtoken bid=@udtoken]  ::  spend money
+      [%join ~]                                  ::  become validator
+      [%leave ~]                                 ::  stop validating
   ==
 ::  
 ::  Part 2: Protocol Configuration
 ::
 ::  max number of transactions per block
 ++  max-txns  `@ud`1.024
-::  blacklist duration
-++  decay-rate  `@dr`~d7
-::  num yarvs per token
+::  blacklist duration (in blocks)
+++  decay-rate  `@ud`1.024
+::  num yarvins per token
 ++  token-scale  `@ud`(pow 2 32)
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
@@ -68,18 +69,21 @@
   ^-  (set @p)
   (silt ~[~woldeg])  
   ::  blacklist: stars in time-out (initially empty)
-  ^-  (map @p @da)  ~
+  ^-  (map @p @ud)  ~
 ::
 ::  Part 3: Implementation-Specific Types
 ::
-::  txn-seed: attestation of a pending txn
-+$  txn-seed  [src=@p tid=@ud hax=@uvH]
+::  Nothing here yet
 ::
 ::  Part 4: Agent Actions
 +$  token-action
   $%  
-    [%bootstrap ~]          :: mint genesis block
+    ::  protocol actions
     [%local-txn =txn-data-user]      :: send txn to agent from client
-    [%remote-txn =txn]        :: send txn to validators from agent
+    [%remote-txn =txn]               :: send txn to validators from agent
+    [%genesis ~]                     :: mint genesis block
+    ::  debug actions
+    [%set-dbug dbug=?]                   :: toggle dbug flag
+    [%set-shared-state val=shared-state] :: force shared state to input
   ==
 --

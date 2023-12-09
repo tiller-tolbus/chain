@@ -10,6 +10,8 @@
 ::
 +$  state-zero
   $:  %zero
+      dbug=?             :: safety rails on dev pokes
+      ::  dbug default to %.y during early testing
       keys=acru:ames
       =pki-store
       =chain
@@ -77,35 +79,42 @@
       txn-data-user.action
     =/  =txn  [(sign:as:keys (jam txn-data)) txn-data]
     =/  new-cards=(list card)
-      :: validator notification
-      :: TODO: use real marks
-      =/  =cage  [%noun !>(txn)]
+      =/  =cage  [%remote-txn !>(txn)]
       ^-  (list card)
       %+  turn  ~(tap in validators.shared)
       |=  val=@p
       [%pass /token/remote-txn/(scot %ud tid.txn) %agent [val %token] %poke cage]
     [new-cards this]
     ::
-    ::   receive a remote txn
+    ::  receive a remote txn
       %remote-txn
     ::  when we have pubkeys, check signature
     =.  pend  (~(put by pend) txn.action)
     [~ this]
     ::
-      %bootstrap
+    ::  mint genesis block
+      %genesis
     ?>  =(~ chain)
     =/  genesis=block-data
-      :*  hght=0
-          prev=(shax ~)
-          stmp=now.bowl
+      :*  stmp=now.bowl
           mint=our.bowl
+          hght=0
+          prev=(shax ~)
           slsh=%.n
+          text=''
           txns=~
       ==
     =/  hashed-block=[@uvH block-data]  [(shax (jam genesis)) genesis]
     =/  signed-block  ;;([@ @] (cue (sign:as:keys (jam hashed-block))))
     =/  block  [-.signed-block hashed-block]
-    `this(chain ~[block])
+    [~ this(chain ~[block])]
+    ::
+      %set-dbug
+    [~ this(dbug dbug.action)]
+    ::
+      %set-shared-state
+    ?>  dbug
+    [~ this(shared val.action)]
   == 
 ::
 ++  on-peek

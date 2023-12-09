@@ -128,7 +128,8 @@
 ::
 ++  on-fail
   |=  [=term =tang]
+  ~>  %bout.[0 '%pki-store +on-fail']
   ^-  (quip card _this)
-  ~&  [term tang]
-  !!
+  ~&  term
+  (mean tang)
 --
