@@ -1,8 +1,7 @@
 #   `%token`
 
 %pki-store
-- parse azimuith diffs
-- subscription interface
+- %token subscribes to %pki-store
 - roundtrip block/txn signatures
 
 - TX structure
