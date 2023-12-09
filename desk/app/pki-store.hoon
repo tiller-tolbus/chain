@@ -1,4 +1,4 @@
-/-  pki-store,
+/-  *pki-store,
     dice
 /+  dbug,
     default-agent,
@@ -10,9 +10,7 @@
 ::
 +$  state-zero
   $:  %zero
-      =logs:pki-store
-      =points:points:naive
-      =store:pki-store
+      =store
   ==
 +$  card  card:agent:gall
 +$  sign  sign:agent:gall
@@ -50,7 +48,9 @@
 ++  on-watch
   |=  path
   ^-  (quip card _this)
-  !!
+  ::  this is the only valid path
+  ?>  =(path /pki-diffs)
+  [~ this]
 ::
 ++  on-leave
   |=  path
@@ -67,17 +67,56 @@
   ^-  (quip card _this)
   ?.  ?=([%pki-store ~] wire)
     (on-agent:def wire sign)
-  ?.  ?=(%fact -.sign)
-    (on-agent:def wire sign)
-  ?+  p.cage.sign  (on-agent:def wire sign)
-      %naive-state
-    =+  !<([s=^state:naive owners:dice sponsors:dice] q.cage.sign)
-    ::  TODO: parse state into store
-    `this(points points:s)
-      %naive-diffs
-    =/  naive-diff  !<(diff:naive q.cage.sign)
-    ::  TODO: parse diff into store
-    `this(logs (snoc logs naive-diff))
+  ?+  -.sign  (on-agent:def wire sign)
+      ::
+      %kick
+    :_  this
+    :~  [%pass /pki-store %agent [our.bowl %azimuth] %watch /event]
+    ==
+      %watch-ack
+    ~&  ["watch-ack" wire sign]
+    [~ this]
+      ::
+      %fact
+    ~&  ["on-agent hit" -.sign p.cage.sign]
+    ?+  p.cage.sign  (on-agent:def wire sign)
+        ::
+        %naive-state
+      =/  snapshot  !<([=^state:naive * *] q.cage.sign)
+      =/  points  points:state:snapshot
+      =/  entries=(list entry)
+        %+  turn  ~(tap by points)
+        |=  [=ship =point:naive]
+        ^-  entry
+        ::  if crypt.keys doesn't work, try auth.keys
+        [ship life.keys.net.point crypt.keys.net.point]
+      =|  new-store=^store
+      =/  new-store
+      |-
+      ^+  new-store
+      ?~  entries  new-store
+      =+  i.entries
+      %=  $
+        entries  t.entries
+        new-store  (~(put bi new-store) ship life pass)
+      ==
+      :_  this(store new-store)
+      :~  [%give %fact ~[/pki-diffs] %pki-snapshot !>(new-store)]
+      ==
+        ::
+        %naive-diffs
+      ~&  ["%naive-diffs hit" sign]
+      =/  diff  !<(diff:naive q.cage.sign)
+      ~&  ["diff" diff]
+      ?.  ?=([%point =ship %keys =keys:naive] diff)
+        [~ this]
+      =/  =entry  [ship.diff life.keys.diff crypt.keys.diff]
+      ~&  ["azimuth update" -]
+      =+  entry
+      :_  this(store (~(put bi store) ship life pass))
+      :~  [%give %fact ~[/pki-diffs] %pki-diff !>(entry)]
+      ==
+    ==
   ==
 ::
 ++  on-arvo
@@ -88,5 +127,6 @@
 ++  on-fail
   |=  [term tang]
   ^-  (quip card _this)
+  ~&  [term tang]
   !!
 --

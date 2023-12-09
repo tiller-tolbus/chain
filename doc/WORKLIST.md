@@ -1,14 +1,18 @@
 #   `%token`
 
+%pki-store
+- %token subscribes to %pki-store
+- roundtrip block/txn signatures
+
 - TX structure
 - TX collector
 - TX validator
 - etc.
 
-- NEXT STEP:  mint genesis block
 
 - [ ] pending TXN tracking
 - [ ] kelvin-versioning types on Urbit?
+- gates for signing txns, signing/hashing blocks
 
 questions:
 - assert on path resolution?

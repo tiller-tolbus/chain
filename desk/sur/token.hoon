@@ -3,11 +3,10 @@
 ::    Part 1: Essential Blockchain Types
 ::    
 +$  chain  (list block)
-+$  block  [hash=@uvH block-data]
++$  block  [sign=@uvH hash=@uvH block-data]
 ::  block-data: data fields hashed at the head of the block
 +$  block-data
-  $:  
-      hght=@ud             ::  block height
+  $:  hght=@ud             ::  block height
       prev=@uvH            ::  parent block hash
       stmp=@da             ::  timestamp (deterministic in case of slash)
       mint=@p              ::  minter address
@@ -22,12 +21,17 @@
   ==
 ::  txn: verifiable modification of shared-state
 +$  txn
+  $:  sig=@uvH             ::  signature
+      txn-data 
+  ==
+::  txn-data: txn data that gets signed
++$  txn-data
   $:  tim=@da              ::  timestamp
       tid=@ud              ::  transaction ID per-ship (nonce)
-      txn-data
+      txn-data-user
   ==
-::  txn-data: user-entered data to process into full txn
-+$  txn-data
+::  txn-data-user: user-entered data to process into full txn
++$  txn-data-user
   $:  src=@p               ::  who is transacting
       bid=@udtoken         ::  claimable by validator for inclusion in a block
       txt=@t               ::  arbitrary metadata (max size enforced by protocol)
@@ -46,7 +50,7 @@
 ++  max-txns  `@ud`1.024
 ::  blacklist duration
 ++  decay-rate  `@dr`~d7
-::  scale factor for tokens
+::  num yarvs per token
 ++  token-scale  `@ud`(pow 2 32)
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
@@ -59,10 +63,10 @@
   %+  turn  (gulf ~marzod ~fipfes)
     |=  p=@
     ^-  [@p @udtoken]
-    [p (bex 16)]
-  ::  validators: nodes that will bootstrap the network
+    [p (mul (bex 16) token-scale)]
+  ::  validators: genesis block author
   ^-  (set @p)
-  (silt ~[~woldeg ~tagbel])  :: TODO: find more stars to participate
+  (silt ~[~woldeg])  
   ::  blacklist: stars in time-out (initially empty)
   ^-  (map @p @da)  ~
 ::
@@ -75,7 +79,7 @@
 +$  token-action
   $%  
     [%bootstrap ~]          :: mint genesis block
-    [%submit-txn =txn-data]      :: send txn to agent from client
-    [%send-txn =txn-seed]        :: send txn to validators from agent
+    [%local-txn =txn-data-user]      :: send txn to agent from client
+    [%remote-txn =txn]        :: send txn to validators from agent
   ==
 --
