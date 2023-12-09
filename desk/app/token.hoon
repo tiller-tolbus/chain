@@ -104,7 +104,7 @@
       ==
     =/  hashed-block=[@uvH block-data]  [(shax (jam genesis)) genesis]
     =/  signed-block  ;;([@ @] (cue (sign:as:keys (jam hashed-block))))
-    =/  block  ;;(block [-.signed-block (cue +.signed-block)])
+    =/  block  [-.signed-block hashed-block]
     `this(chain ~[block])
   == 
 ::
