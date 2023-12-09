@@ -8,6 +8,7 @@
 - NEXT STEP:  mint genesis block
 
 - [ ] pending TXN tracking
+- [ ] kelvin-versioning types on Urbit?
 
 questions:
 - assert on path resolution?
