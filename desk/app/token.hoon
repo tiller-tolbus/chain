@@ -1,4 +1,5 @@
-/-  *token
+/-  *pki-store,
+    *token
 /+  dbug,
     default-agent,
     verb
@@ -9,9 +10,10 @@
 ::
 +$  state-zero
   $:  %zero
-      =chain
       keys=acru:ames
-      pend=(set txn)     :: cryptographically verified but unauthenticated
+      =pki-store
+      =chain
+      pend=(set txn)
       ltid=@ud           :: last used txn id
       shared=shared-state
   ==
@@ -37,6 +39,8 @@
   :-
   ::  subscribe to private keys from jael
   :~  [%pass /token/jael/private-keys %arvo %j %private-keys ~]
+  ::  subscribe to pki-store updates
+      [%pass /token/pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
   ==
   ::  bootstrap shared state
   this(shared bootstrap-state)
@@ -109,10 +113,38 @@
   [~ ~]
 ::
 ++  on-agent
-  |=  [wir=wire sig=sign:agent:gall]
+  |=  [=wire =sign:agent:gall]
   ~>  %bout.[0 '%token +on-agent']
   ^-  (quip card _this)
-  `this
+  ::  only valid wire is pki-diffs
+  ?+  wire  ~&([%bad-wire wire] !!)
+      [%token %pki-store ~]
+    ?+  -.sign  ~&([%bad-sign -.sign] !!)
+        ::
+        %fact
+      ?+  p.cage.sign  ~&([%bad-mark p.cage.sign] !!)
+          %pki-snapshot
+        =/  new-pki-store  !<(^pki-store q.cage.sign)
+        [~ this(pki-store new-pki-store)]
+          %pki-diff
+        =/  entry  !<(pki-entry q.cage.sign)
+        =+  entry
+        =/  new-pki-store  (~(put bi pki-store) ship life pass)
+        [~ this(pki-store new-pki-store)]
+      ==
+        ::
+        ::  resub to pki-store on kick
+        %kick
+      :_  this
+      :~  :*  %pass  /token/pki-store  %agent
+              [our.bowl %pki-store]  %watch
+              /pki-diffs
+      ==  ==
+        ::
+        %watch-ack
+      [~ this]
+    ==
+  ==
 ::
 ++  on-arvo
   |=  [=wire sign=sign-arvo]

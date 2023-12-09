@@ -10,7 +10,7 @@
 ::
 +$  state-zero
   $:  %zero
-      =store
+      =pki-store
   ==
 +$  card  card:agent:gall
 +$  sign  sign:agent:gall
@@ -84,13 +84,13 @@
         %naive-state
       =/  snapshot  !<([=^state:naive * *] q.cage.sign)
       =/  points  points:state:snapshot
-      =/  entries=(list entry)
+      =/  entries=(list pki-entry)
         %+  turn  ~(tap by points)
         |=  [=ship =point:naive]
-        ^-  entry
+        ^-  pki-entry
         ::  if crypt.keys doesn't work, try auth.keys
         [ship life.keys.net.point crypt.keys.net.point]
-      =|  new-store=^store
+      =|  new-store=^pki-store
       =/  new-store
       |-
       ^+  new-store
@@ -100,7 +100,7 @@
         entries  t.entries
         new-store  (~(put bi new-store) ship life pass)
       ==
-      :_  this(store new-store)
+      :_  this(pki-store new-store)
       :~  [%give %fact ~[/pki-diffs] %pki-snapshot !>(new-store)]
       ==
         ::
@@ -110,11 +110,11 @@
       ~&  ["diff" diff]
       ?.  ?=([%point =ship %keys =keys:naive] diff)
         [~ this]
-      =/  =entry  [ship.diff life.keys.diff crypt.keys.diff]
+      =/  =pki-entry  [ship.diff life.keys.diff crypt.keys.diff]
       ~&  ["azimuth update" -]
-      =+  entry
-      :_  this(store (~(put bi store) ship life pass))
-      :~  [%give %fact ~[/pki-diffs] %pki-diff !>(entry)]
+      =+  pki-entry
+      :_  this(pki-store (~(put bi pki-store) ship life pass))
+      :~  [%give %fact ~[/pki-diffs] %pki-diff !>(pki-entry)]
       ==
     ==
   ==
