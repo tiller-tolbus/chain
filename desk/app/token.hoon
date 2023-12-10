@@ -12,10 +12,11 @@
   $:  %zero
       dbug=?             :: safety rails on dev pokes
       ::  dbug default to %.y during early testing
+      our-life=@ud
       keys=acru:ames
       =pki-store
       =chain
-      pend=(set txn)
+      pend=(set @)       :: txn queue
       ltid=@ud           :: last used txn id
       shared=shared-state
   ==
@@ -64,50 +65,70 @@
   ~>  %bout.[0 '%token +on-poke']
   ~&  mark
   ^-  (quip card _this)
-  ::  add: assert on mark
+  ?>  ?=(%token-action mark)
   =/  action  !<(token-action vase)
   ~&  -.action
-  ?-  -.action
+  ?-  -.action  :: ~|(%bad-mark !!)
     ::
     ::  receive txn from client
       %local-txn
     =.  ltid  +(ltid)
-    =/  src  src.txn-data-user.action
-    =/  =txn-data
-      :+  tim=now.bowl
-        tid=ltid
-      txn-data-user.action
-    =/  =txn  [(sign:as:keys (jam txn-data)) txn-data]
-    =/  new-cards=(list card)
-      =/  =cage  [%remote-txn !>(txn)]
+    =/  =txn
+      :*  src=our.bowl
+          liv=our-life
+          tim=now.bowl
+          tid=ltid
+          txn-data.action
+      ==
+    =/  msg=@  (sign:as:keys (jam txn))
+    ::  alert validators of new txn
+    ~&  "checkpoint"
+    =/  cards=(list card)
+      =/  =cage  [%token-action !>([%remote-txn msg])]
       ^-  (list card)
       %+  turn  ~(tap in validators.shared)
       |=  val=@p
-      [%pass /token/remote-txn/(scot %ud tid.txn) %agent [val %token] %poke cage]
-    [new-cards this]
+      :*  %pass  /token/remote-txn/(scot %p our.bowl)/(scot %ud tid.txn)
+          %agent  [val %token]  %poke  cage
+      ==
+    [cards this]
     ::
     ::  receive a remote txn
       %remote-txn
-    ::  when we have pubkeys, check signature
-    =.  pend  (~(put by pend) txn.action)
+    ::  todo: query pki
+    ::  currently using our own signature
+    ::
+    ::  verify signature
+    =/  ver  (sure:as:keys msg.action)
+    ?~  ver  ~&("failed signature" [~ this])
+    ::  verify structure of txn
+    =/  des  ((soft txn) (cue u.ver))
+    ?~  des  ~&("failed deserialization" [~ this])
+    =.  pend  (~(put in pend) msg.action)
+    ~&  ["queue updated" pend]
     [~ this]
     ::
     ::  mint genesis block
       %genesis
     ?>  =(~ chain)
-    =/  genesis=block-data
+    =/  genesis
+      %-  jam
+      ^-  block
       :*  stmp=now.bowl
           mint=our.bowl
+          life=our-life
           hght=0
           prev=(shax ~)
           slsh=%.n
           text=''
           txns=~
       ==
-    =/  hashed-block=[@uvH block-data]  [(shax (jam genesis)) genesis]
-    =/  signed-block  ;;([@ @] (cue (sign:as:keys (jam hashed-block))))
-    =/  block  [-.signed-block hashed-block]
-    [~ this(chain ~[block])]
+    =/  =hashed-block  [(shax genesis) genesis]
+    =/  signed-block
+      %-  (soft signed-block)
+      (cue (sign:as:keys (jam hashed-block)))
+    ?~  signed-block  ~&("failed to deserialize genesis" [~ this])
+    [~ this(chain ~[(jam u.signed-block)])]
     ::
       %set-dbug
     [~ this(dbug dbug.action)]
@@ -128,8 +149,16 @@
   ~>  %bout.[0 '%token +on-agent']
   ~&  [wire -.sign]
   ^-  (quip card _this)
-  ::  only valid wire is pki-diffs
   ?+  wire  ~&([%bad-wire wire] !!)
+    ::
+    ::  %remote transactions
+      [%token %remote-txn @ @ ~]
+    ?+  -.sign  ~&([%bad-sign -.sign] !!)
+        [%poke-ack]
+      [~ this]
+    ==
+    ::
+    ::  subscription responses to %pki-store
       [%token %pki-store ~]
     ?+  -.sign  ~&([%bad-sign -.sign] !!)
         ::
@@ -188,7 +217,11 @@
     =/  life  life.sign
     =/  vein  vein.sign
     =/  private-key=ring  (~(got by vein) life)
-    `this(keys (nol:nu:crub:crypto private-key))
+    :-  ~
+    %=  this
+      our-life  life.sign
+      keys  (nol:nu:crub:crypto private-key)
+    ==
   ==
 ::
 ++  on-watch

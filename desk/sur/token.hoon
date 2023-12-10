@@ -2,39 +2,44 @@
 ::
 ::    Part 1: Essential Blockchain Types
 ::    
-+$  chain  (list block)
-+$  block  [sign=@uvH hash=@uvH block-data]
-::  block-data: data fields hashed at the head of the block
-+$  block-data
-  $:  stmp=@da             ::  timestamp (deterministic in case of slash)
-      mint=@p              ::  minter address
-      hght=@ud             ::  block height
-      prev=@uvH            ::  parent block hash
-      slsh=?               ::  whether to slash mint
-      text=@t              ::  256-char arbitrary metadata
-      txns=(list txn)      ::  all transactions (size enforced by protocol)
++$  chain  (list signed-block=@)
+::
+::  every crypto step (sign or hash) is followed by a
+::  serialization (jam). atoms are given faces indicating
+::  what they should deserialize (cue) to. 
+::
+::  signature on hash and jammed hashed block
++$  signed-block  [=life sign=@ hashed-block=@]
+::  hash and jammed block
++$  hashed-block  [hash=@uvH block=@]
+::  block: data fields comprising a block
++$  block
+  $:  stmp=@da                 ::  timestamp (deterministic in case of slash)
+      mint=@p                  ::  minter address
+      life=@ud
+      hght=@ud                 ::  block height
+      prev=@uvH                ::  parent block hash
+      slsh=?                   ::  whether to slash mint
+      text=@t                  ::  256-char arbitrary metadata
+      txns=(list @)            ::  all transactions
   ==
-::  shared-state: total state derivable from chain
-+$  shared-state
-  $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
-      validators=(set @p)      ::  eligible validators for election
-      blacklist=(map @p @ud)    ::  slashed validators in timeout
+::
+::  signed-txn: verifiable modification of shared-state
++$  signed-txn
+  $:  sig=@            ::  signature
+      txn=@
   ==
-::  txn: verifiable modification of shared-state
+::  txn: txn data that gets signed
 +$  txn
-  $:  sig=@uvH             ::  signature
-      txn-data 
-  ==
-::  txn-data: txn data that gets signed
-+$  txn-data
-  $:  tim=@da              ::  timestamp
-      tid=@ud              ::  transaction ID per-ship (nonce)
-      txn-data-user
-  ==
-::  txn-data-user: user-entered data to process into full txn
-+$  txn-data-user
   $:  src=@p               ::  who is transacting
-      bid=@udtoken         ::  claimable by validator for inclusion in a block
+      liv=@ud              ::  revision number of src
+      tim=@da              ::  timestamp
+      tid=@ud              ::  transaction ID per-ship (nonce)
+      txn-data
+  ==
+::  txn-data: user-entered data to process into full txn
++$  txn-data
+  $:  bid=@udtoken         ::  claimable by validator for inclusion in a block
       txt=@t               ::  arbitrary metadata (max size enforced by protocol)
       act=chain-action     ::  modification of shared-state
   ==
@@ -44,6 +49,13 @@
       [%join ~]                                  ::  become validator
       [%leave ~]                                 ::  stop validating
   ==
+::  shared-state: total state derivable from chain
++$  shared-state
+  $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
+      validators=(set @p)      ::  eligible validators for election
+      blacklist=(map @p @ud)    ::  slashed validators in timeout
+  ==
+
 ::  
 ::  Part 2: Protocol Configuration
 ::
@@ -73,14 +85,24 @@
 ::
 ::  Part 3: Implementation-Specific Types
 ::
-::  Nothing here yet
+++  bootstrap-fakezod
+  ^-  shared-state  :+  
+  ^-  (map @p @udtoken)  
+  %-  molt
+  %+  turn  (gulf ~zod ~fes)
+    |=  p=@
+    ^-  [@p @udtoken]
+    [p (mul (bex 16) token-scale)]
+  ^-  (set @p)
+  (silt ~[~zod])  
+  ^-  (map @p @ud)  ~
 ::
 ::  Part 4: Agent Actions
 +$  token-action
   $%  
     ::  protocol actions
-    [%local-txn =txn-data-user]      :: send txn to agent from client
-    [%remote-txn =txn]               :: send txn to validators from agent
+    [%local-txn =txn-data]           :: send txn to agent from client
+    [%remote-txn msg=@]        :: send txn to validators from agent
     [%genesis ~]                     :: mint genesis block
     ::  debug actions
     [%set-dbug dbug=?]                   :: toggle dbug flag
