@@ -9,7 +9,7 @@
 ::  what they should deserialize (cue) to. 
 ::
 ::  signature on hash and jammed hashed block
-+$  signed-block  [=life sign=@ hashed-block=@]
++$  signed-block  [sign=@ hashed-block=@]
 ::  hash and jammed block
 +$  hashed-block  [hash=@uvH block=@]
 ::  block: data fields comprising a block
@@ -45,9 +45,11 @@
   ==
 ::  chain-action: modification of shared-state
 +$  chain-action
-  $%  [%spend des=@p amt=@udtoken bid=@udtoken]  ::  spend money
-      [%join ~]                                  ::  become validator
-      [%leave ~]                                 ::  stop validating
+  $%  [%spend des=@p amt=@udtoken]  ::  spend money
+      [%join ~]                     ::  become validator
+      [%leave ~]                    ::  stop validating
+      [%claim ~]                    ::  claim airdrop tokens
+      [%null ~]                     ::  do nothing
   ==
 ::  shared-state: total state derivable from chain
 +$  shared-state
@@ -59,12 +61,13 @@
 ::  
 ::  Part 2: Protocol Configuration
 ::
+++  block-time  `@dr`~m10
 ::  max number of transactions per block
 ++  max-txns  `@ud`1.024
 ::  blacklist duration (in blocks)
 ++  decay-rate  `@ud`1.024
 ::  num yarvins per token
-++  token-scale  `@ud`(pow 2 32)
+++  yarvin-scale  `@ud`(pow 2 16)
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
 ::  initial shared-state, including airdrop to stars
@@ -76,7 +79,7 @@
   %+  turn  (gulf ~marzod ~fipfes)
     |=  p=@
     ^-  [@p @udtoken]
-    [p (mul (bex 16) token-scale)]
+    [p (mul (bex 16) yarvin-scale)]
   ::  validators: genesis block author
   ^-  (set @p)
   (silt ~[~woldeg])  
@@ -92,7 +95,7 @@
   %+  turn  (gulf ~zod ~fes)
     |=  p=@
     ^-  [@p @udtoken]
-    [p (mul (bex 16) token-scale)]
+    [p (mul (bex 16) yarvin-scale)]
   ^-  (set @p)
   (silt ~[~zod])  
   ^-  (map @p @ud)  ~
