@@ -19,6 +19,7 @@
       pend=(set @)       :: txn queue
       ltid=@ud           :: last used txn id
       next=@p            :: next-validator
+      pubs=(set @p)      :: publishers that we sub to
       shared=shared-state
   ==
 ::
@@ -40,16 +41,21 @@
 ++  on-init
   ^-  (quip card _this)
   ~>  %bout.[0 '%token +on-init']
-  :-
+  =.  shared  bootstrap-state
+  =.  pubs    (silt ~[~woldeg])
+  :_  this
+  %+  weld
   ::  subscribe to private keys from jael
+  ^-  (list card)
   :~  [%pass /token/private-keys %arvo %j %private-keys ~]
   ::  subscribe to pki-store updates
       [%pass /token/pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
-  ::  subscribve to block alerts from bootstrap (currently our)
-      [%pass /token/block-alert %agent [our.bowl %token] %watch /block-alerts]
   ==
-  ::  bootstrap shared state
-  this(shared bootstrap-state)
+  ::  subscribe to block alerts from pubs
+  ^-  (list card)
+  %+  turn  ~(tap in pubs)
+  |=  pub=@p
+      [%pass /token/block-alerts %agent [pub %token] %watch /block-alerts]
 ::
 ++  on-save
   ^-  vase
@@ -131,7 +137,7 @@
     :_  this(chain ~[genesis], next our.bowl)
     :~  [%pass /block/0 %grow /block/0 token-block+signed-block]
         [%pass /block/0 %arvo %b %wait `@da`(add now.bowl block-time)]
-        [%give %fact ~[/block-alerts] %block-alert !>(0)]
+        [%give %fact ~[/block-alerts] %token-block-alert !>(0)]
     ==
     ::
       %set-dbug
@@ -163,18 +169,19 @@
     ==
     ::
     ::  block alerts
-      [%token %block-alert ~]
+      [%token %block-alerts ~]
     ?+  -.sign  ~&([%bad-sign -.sign] !!)
         ::
         %fact
-      ?>  =(p.cage.sign %block-alert)
-      =/  path  !<(path q.cage.sign)
-      ?>  ?=([tid=@tas ~] path)
-      =/  tid  -.path
+      ?>  =(p.cage.sign %token-block-alert)
+      =/  tid  !<(@ud q.cage.sign)
       :_  this
       :~  :*  %pass  /get-block  %arvo  %a  %keen  
-              src.bowl  /g/x/0/token//block/[tid]
+              src.bowl  
+              /g/x/(scot %da now.bowl)/token//block/(scot %ud tid)
           ==  ==
+        %watch-ack
+      [~ this]
     ==
     ::
     ::  subscription responses to %pki-store
@@ -212,28 +219,37 @@
   ~&  [wire -.sign -.+.sign]
   ^-  (quip card _this)
   ?+    wire  ~|(%bad-wire !!)
-      [%token %block-alerts ~]
+      [%get-block ~]
     ?+    sign  ~|(%bad-arvo-sign !!)
         [%ames %tune *]
       ::  remote scry request handler
       =/  roar  roar.sign
+      ~&  roar
       ?~  roar  ~|(%empty-roar !!)
       ::  verify remote scry response is marked %token-block
-      ?>  =(%token-block p:(need q.dat.u.roar))
-      ::  itxn: incoming TXN
-      =/  signed-block  ((soft @) q:(need q.dat.u.roar))
+      ?~  q.dat.u.roar  ~&("empty scry response" [~ this])
+      ?>  =(%token-block p.u.q.dat.u.roar)
+      =/  signed-block  ((soft @) q.u.q.dat.u.roar)
       ?~  signed-block  ~&("page is not atom" [~ this])
-      =/  ver  (sure:as:keys u.signed-block)
+      ~&  ["signed-block" u.signed-block]
+      =/  hashed-block  ;;([@ @] (cue +:;;([@ @] (cue u.signed-block))))
+      ~&  ["hashed block" hashed-block]
+      ?.  =(-.hashed-block (shax +.hashed-block))
+        ~&("hash does not match block" [~ this])
+      =/  block  ;;(block (cue +.hashed-block))
+      =+  block
+      =/  keys=(unit pass)  (~(get bi pki-store) mint life)
+      ?~  keys  ~&("could not find keys" [~ this])
+      =/  crub=acru:ames  (com:nu:crub:crypto u.keys)
+      =/  ver  (sure:as:crub u.signed-block)
       ?~  ver  ~&("failed signature" [~ this])
-      =/  des  ((soft block) (cue u.ver))
-      ?~  des  ~&("failed deserialization" [~ this])
       ::  verify block
       ::  todo
       =.  chain  [u.signed-block chain]
       [~ this]
     ==
     ::
-      [%token %jael %private-keys ~]
+      [%token %private-keys ~]
     ?>  ?=([%jael %private-keys *] sign)
     =/  life  life.sign
     =/  vein  vein.sign

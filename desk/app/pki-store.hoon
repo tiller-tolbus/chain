@@ -3,7 +3,8 @@
 /+  dbug,
     default-agent,
     verb,
-    naive
+    naive,
+    azimuth
 ::
 |%
 +$  versioned-state  $%(state-zero)
@@ -94,7 +95,11 @@
         |=  [=ship =point:naive]
         ^-  pki-entry
         ::  if crypt.keys doesn't work, try auth.keys
-        [ship life.keys.net.point crypt.keys.net.point]
+        =+  keys.net.point
+        =/  crypt  (as-octs:mimes:html crypt)
+        =/  auth  (as-octs:mimes:html auth)
+        =/  =pass  (pass-from-eth.azimuth crypt auth suite)
+        [ship life pass]
       =|  new-store=^pki-store
       =/  new-store
       |-
@@ -113,7 +118,7 @@
       =/  diff  !<(diff:naive q.cage.sign)
       ?.  ?=([%point =ship %keys =keys:naive] diff)
         [~ this]
-      =/  =pki-entry  [ship.diff life.keys.diff crypt.keys.diff]
+      =/  =pki-entry  [ship.diff life.keys.diff auth.keys.diff]
       =+  pki-entry
       :_  this(pki-store (~(put bi pki-store) ship life pass))
       :~  [%give %fact ~[/pki-diffs] %pki-diff !>(pki-entry)]
