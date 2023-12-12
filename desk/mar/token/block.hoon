@@ -1,5 +1,5 @@
 /-  token
-|_  res=@
+|_  res=raw-signed-block.token
 ++  grab
   |%
   ++  noun  @
@@ -8,6 +8,7 @@
 ++  grow
   |%
   ++  noun  res
+  ++  atom  res
   --
 ++  grad  %atom
 --

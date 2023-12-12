@@ -2,16 +2,22 @@
 ::
 ::    Part 1: Essential Blockchain Types
 ::    
-+$  chain  (list signed-block=@)
++$  chain  (list raw-signed-block=@)
 ::
 ::  every crypto step (sign or hash) is followed by a
 ::  serialization (jam). atoms are given faces indicating
 ::  what they should deserialize (cue) to. 
 ::
+::  jammed signed block
++$  raw-signed-block  @
 ::  signature on hash and jammed hashed block
-+$  signed-block  [sign=@ hashed-block=@]
++$  signed-block  [sign=@ raw-hashed-block=@]
+::  jammed hashed block
++$  raw-hashed-block  @
 ::  hash and jammed block
-+$  hashed-block  [hash=@uvH block=@]
++$  hashed-block  [hash=@uvH raw-block=@]
+::  jammed block
++$  raw-block  @
 ::  block: data fields comprising a block
 +$  block
   $:  stmp=@da                 ::  timestamp (deterministic in case of slash)
@@ -21,8 +27,11 @@
       prev=@uvH                ::  parent block hash
       slsh=?                   ::  whether to slash mint
       text=@t                  ::  256-char arbitrary metadata
-      txns=(list @)            ::  all transactions
+      txns=(list raw-signed-txn=@)            ::  all transactions
   ==
+::
+::  jammed signed-txn
++$  raw-signed-txn  @
 ::
 ::  signed-txn: verifiable modification of shared-state
 +$  signed-txn

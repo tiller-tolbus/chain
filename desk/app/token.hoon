@@ -42,7 +42,7 @@
   ^-  (quip card _this)
   ~>  %bout.[0 '%token +on-init']
   =.  shared  bootstrap-state
-  =.  pubs    (silt ~[~woldeg])
+  =.  pubs    (silt ~[~woldeg ~zod])
   :_  this
   %+  weld
   ::  subscribe to private keys from jael
@@ -120,7 +120,7 @@
     ::  mint genesis block
       %genesis
     ?>  =(~ chain)
-    =/  genesis
+    =/  genesis=raw-block
       %-  jam
       ^-  block
       :*  stmp=now.bowl
@@ -133,9 +133,9 @@
           txns=~
       ==
     =/  =hashed-block  [(shax genesis) genesis]
-    =/  signed-block  (sign:as:keys (jam hashed-block))
+    =/  =raw-signed-block  (sign:as:keys (jam hashed-block))
     :_  this(chain ~[genesis], next our.bowl)
-    :~  [%pass /block/0 %grow /block/0 token-block+signed-block]
+    :~  [%pass /block/0 %grow /block/0 token-block+raw-signed-block]
         [%pass /block/0 %arvo %b %wait `@da`(add now.bowl block-time)]
         [%give %fact ~[/block-alerts] %token-block-alert !>(0)]
     ==
@@ -226,26 +226,23 @@
       =/  roar  roar.sign
       ~&  roar
       ?~  roar  ~|(%empty-roar !!)
-      ::  verify remote scry response is marked %token-block
-      ?~  q.dat.u.roar  ~&("empty scry response" [~ this])
+      ?~  q.dat.u.roar  ~|(%empty-scry-response !!)
       ?>  =(%token-block p.u.q.dat.u.roar)
-      =/  signed-block  ((soft @) q.u.q.dat.u.roar)
-      ?~  signed-block  ~&("page is not atom" [~ this])
-      ~&  ["signed-block" u.signed-block]
-      =/  hashed-block  ;;([@ @] (cue +:;;([@ @] (cue u.signed-block))))
-      ~&  ["hashed block" hashed-block]
-      ?.  =(-.hashed-block (shax +.hashed-block))
-        ~&("hash does not match block" [~ this])
-      =/  block  ;;(block (cue +.hashed-block))
+      =/  =raw-signed-block  ;;(@ q.u.q.dat.u.roar)
+      =/  =signed-block  ;;([@ @] (cue raw-signed-block))
+      =/  =raw-hashed-block  +.signed-block
+      =/  =hashed-block  ;;([@ @] (cue raw-hashed-block))
+      =/  =raw-block  +.hashed-block
+      =/  =block  ;;(block (cue raw-block))
       =+  block
       =/  keys=(unit pass)  (~(get bi pki-store) mint life)
-      ?~  keys  ~&("could not find keys" [~ this])
+      ?~  keys  ~|(%key-lookup-failed !!)
       =/  crub=acru:ames  (com:nu:crub:crypto u.keys)
-      =/  ver  (sure:as:crub u.signed-block)
-      ?~  ver  ~&("failed signature" [~ this])
+      =/  ver  (sure:as:crub raw-signed-block)
+      ?~  ver  ~|(%bad-signature !!)
       ::  verify block
       ::  todo
-      =.  chain  [u.signed-block chain]
+      =.  chain  [raw-signed-block chain]
       [~ this]
     ==
     ::
