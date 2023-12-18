@@ -41,8 +41,8 @@
 ++  on-init
   ^-  (quip card _this)
   ~>  %bout.[0 '%token +on-init']
-  =.  shared  bootstrap-state
-  =.  pubs    (silt ~[~woldeg ~zod])
+  :: =.  shared  bootstrap-state
+  =.  pubs    (silt ~[~woldeg])
   :_  this
   %+  weld
   ::  subscribe to private keys from jael
@@ -120,7 +120,7 @@
     ::  mint genesis block
       %genesis
     ?>  =(~ chain)
-    =/  genesis=raw-block
+    =/  genesis
       %-  jam
       ^-  block
       :*  stmp=now.bowl
@@ -133,9 +133,9 @@
           txns=~
       ==
     =/  =hashed-block  [(shax genesis) genesis]
-    =/  =raw-signed-block  (sign:as:keys (jam hashed-block))
+    =/  signed-block  (sign:as:keys (jam hashed-block))
     :_  this(chain ~[genesis], next our.bowl)
-    :~  [%pass /block/0 %grow /block/0 token-block+raw-signed-block]
+    :~  [%pass /block/0 %grow /block/0 token-block+signed-block]
         [%pass /block/0 %arvo %b %wait `@da`(add now.bowl block-time)]
         [%give %fact ~[/block-alerts] %token-block-alert !>(0)]
     ==
@@ -226,23 +226,26 @@
       =/  roar  roar.sign
       ~&  roar
       ?~  roar  ~|(%empty-roar !!)
-      ?~  q.dat.u.roar  ~|(%empty-scry-response !!)
+      ::  verify remote scry response is marked %token-block
+      ?~  q.dat.u.roar  ~&("empty scry response" [~ this])
       ?>  =(%token-block p.u.q.dat.u.roar)
-      =/  =raw-signed-block  ;;(@ q.u.q.dat.u.roar)
-      =/  =signed-block  ;;([@ @] (cue raw-signed-block))
-      =/  =raw-hashed-block  +.signed-block
-      =/  =hashed-block  ;;([@ @] (cue raw-hashed-block))
-      =/  =raw-block  +.hashed-block
-      =/  =block  ;;(block (cue raw-block))
+      =/  signed-block  ((soft @) q.u.q.dat.u.roar)
+      ?~  signed-block  ~&("page is not atom" [~ this])
+      ~&  ["signed-block" u.signed-block]
+      =/  hashed-block  ;;([@ @] (cue +:;;([@ @] (cue u.signed-block))))
+      ~&  ["hashed block" hashed-block]
+      ?.  =(-.hashed-block (shax +.hashed-block))
+        ~&("hash does not match block" [~ this])
+      =/  block  ;;(block (cue +.hashed-block))
       =+  block
       =/  keys=(unit pass)  (~(get bi pki-store) mint life)
-      ?~  keys  ~|(%key-lookup-failed !!)
+      ?~  keys  ~&("could not find keys" [~ this])
       =/  crub=acru:ames  (com:nu:crub:crypto u.keys)
-      =/  ver  (sure:as:crub raw-signed-block)
-      ?~  ver  ~|(%bad-signature !!)
+      =/  ver  (sure:as:crub u.signed-block)
+      ?~  ver  ~&("failed signature" [~ this])
       ::  verify block
       ::  todo
-      =.  chain  [raw-signed-block chain]
+      =.  chain  [u.signed-block chain]
       [~ this]
     ==
     ::

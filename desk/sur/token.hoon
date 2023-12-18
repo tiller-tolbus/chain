@@ -60,9 +60,23 @@
       [%claim ~]                    ::  claim airdrop tokens
       [%null ~]                     ::  do nothing
   ==
+::  txn-result: result of applying txn
++$  txn-result
+  $%  [%success =shared-state pool=@udtoken]
+      [%bad-rank src=@p =rank:title]
+      [%bad-rank-des src=@p des=@p =rank:title]
+      [%bad-rank-val src=@p =rank:title]
+      [%src-no-bal src=@p]  
+      [%bid-gte-bal src=@p bid=@udtoken bal=@udtoken]
+      [%amt-gte-bal src=@p amt=@udtoken bal=@udtoken]
+      [%already-val src=@p]
+      [%not-val src=@p]
+      [%no-claim src=@p]
+  ==
 ::  shared-state: total state derivable from chain
 +$  shared-state
   $:  ledger=(map @p @udtoken)  ::  network-wide $TOKEN balance
+      claimants=(set @p)       ::  validators that can claim tokens
       validators=(set @p)      ::  eligible validators for election
       blacklist=(map @p @ud)    ::  slashed validators in timeout
   ==
@@ -80,34 +94,34 @@
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
 ::  initial shared-state, including airdrop to stars
-++  bootstrap-state
-  ^-  shared-state  :+  
-  ::  ledger: initial airdrop to stars
-  ^-  (map @p @udtoken)  
-  %-  molt
-  %+  turn  (gulf ~marzod ~fipfes)
-    |=  p=@
-    ^-  [@p @udtoken]
-    [p (mul (bex 16) yarvin-scale)]
-  ::  validators: genesis block author
-  ^-  (set @p)
-  (silt ~[~woldeg])  
-  ::  blacklist: stars in time-out (initially empty)
-  ^-  (map @p @ud)  ~
+:: ++  bootstrap-state
+::   ^-  shared-state  :+  
+::   ::  ledger: initial airdrop to stars
+::   ^-  (map @p @udtoken)  
+::   %-  molt
+::   %+  turn  (gulf ~marzod ~fipfes)
+::     |=  p=@
+::     ^-  [@p @udtoken]
+::     [p (mul (bex 16) yarvin-scale)]
+::   ::  validators: genesis block author
+::   ^-  (set @p)
+::   (silt ~[~woldeg])  
+::   ::  blacklist: stars in time-out (initially empty)
+::   ^-  (map @p @ud)  ~
 ::
 ::  Part 3: Implementation-Specific Types
 ::
-++  bootstrap-fakezod
-  ^-  shared-state  :+  
-  ^-  (map @p @udtoken)  
-  %-  molt
-  %+  turn  (gulf ~zod ~fes)
-    |=  p=@
-    ^-  [@p @udtoken]
-    [p (mul (bex 16) yarvin-scale)]
-  ^-  (set @p)
-  (silt ~[~zod])  
-  ^-  (map @p @ud)  ~
+:: ++  bootstrap-fakezod
+::   ^-  shared-state  :+  
+::   ^-  (map @p @udtoken)  
+::   %-  molt
+::   %+  turn  (gulf ~zod ~fes)
+::     |=  p=@
+::     ^-  [@p @udtoken]
+::     [p (mul (bex 16) yarvin-scale)]
+::   ^-  (set @p)
+::   (silt ~[~zod])  
+::   ^-  (map @p @ud)  ~
 ::
 ::  Part 4: Agent Actions
 +$  token-action
