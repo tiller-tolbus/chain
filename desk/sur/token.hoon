@@ -27,7 +27,7 @@
       prev=@uvH                ::  parent block hash
       slsh=?                   ::  whether to slash mint
       text=@t                  ::  256-char arbitrary metadata
-      txns=(list raw-signed-txn=@)            ::  all transactions
+      txns=(list raw-signed-txn)            ::  all transactions
   ==
 ::
 ::  jammed signed-txn
@@ -76,7 +76,7 @@
 ::  blacklist duration (in blocks)
 ++  decay-rate  `@ud`1.024
 ::  num yarvins per token
-++  yarvin-scale  `@ud`(pow 2 16)
+++  yarvin-scale  `@ud`(pow 2 32)
 ::  max character length of txt field in txn
 ++  max-txt-chars  `@ud`256
 ::  initial shared-state, including airdrop to stars
