@@ -1,96 +1,45 @@
-`%token` is an Urbit application for sharing a transaction ledger of a fungible digital token over a Byzantine fault-tolerant peer to peer network. Its basic state is a `ledger=(map @p @ud)`, where the `@p` represents an Urbit ID, and thereby a single account in the ledger, and the `@ud` represents an account balance of a fungible asset `$TOKEN`. Global consensus on the state of this `ledger` is enforced by a simplistic Proof of Identity consensus protocol leveraging the scarcity of Urbit Stars. 
+`%chain` is a research project into achieving Byzantine fault-tolerant state machine replication (BFT-SMR) within the context of an Urbit application. If successful, this project will result in an application `%chain` that integrates well with other Urbit applications and improves the utility of Urbit ID. 
 
-In other words, `%token` is an Urbit-native Proof of Identity blockchain that implements a cryptocurrency `$TOKEN`. 
+`%chain` is a young project and some aspects of it are difficult to document due to liability to change. We will here highlight the overall goals and strategy of the project, and encourage readers to inspect the repo or reach out to developers with specific questions. 
+## Goals
 
-The `%token` blockchain accepts three kinds of transactions: `%deposit`, `%stake`, and `%unstake`.
+The final goal of `%chain` is to build a blockchain with an indefinite lifespan. By building on top of Urbit OS, which aims to be finally specified as a frozen standard, `%chain` similarly aims standardize its protocol as an Urbit application that does not need to update in order to survive. This is simultaneously the farthest-reaching goal of the project and also the most foundational guiding principle. 
 
-```hoon
-+$  txn
-  $%
-    %deposit
-      $:
-        src=@p
-        des=@p
-        amt=@ud
-        txt=@t
-        bid=@ud
-        sig=@uw
-      ==
-    %stake  [src=@p sig=@uw]
-    %unstake  [src=@p sig=@uw]
-  ==
-```
+There are some other goals in mind for the `%chain` project that are worth considering. 
 
-These transactions will become events in a log that can be used to deterministically recreate the shared state of the network. 
+* Establish a canonical Urbit blockchain called `%chain`. Provide developers with a source of shared truth that can be trusted to also be the source of shared truth for other Urbit applications. Establish a commanding network effect within the Urbit ecosystem. 
+* Establish a canonical Urbit currency called `$TOKEN`. Provide the market with a fungible token that is broadly accepted as a form of payment by Urbit users, can easily be integrated into any Urbit application, and whose value can be expected to correlate with the degree of economic activity on Urbit. 
+* Leverage Urbit ID for sybil resistance. This includes restricting validation rights to higher-level nodes such as stars and galaxies. There may be a case in which the sybil resistance properties of planets is applicable, such as in spam resistance for fee-less payment systems. 
+* Provide an upside to address space holders. Treat investors in Urbit ID as first-class citizens of the Urbit economy and seek to maximize the correlation between `$TOKEN` value and address space value. 
+* Integrate Urbit ID as a native blockchain account. Allow tokens to be sent directly to and from an Urbit ID, in addition to a public key account as is normal in blockchain networks elsewhere. 
+* Make it easy for Urbit users to run full nodes on their own ships and independently verify the state of the network. 
 
-```hoon
-+$  shared-state
-  $:
-    ledger=(map @p @ud)
-    validators=(list @p)
-    blacklist=(map @p @da)
-  ==
-```
+The above goals should be considered core goals of the project and will not be changed unless in light of severe feasibility constraints. There are some other project goals that are more loosely held, and are worth mentioning. 
 
-In other words, a blockchain is being constructed so that the network of `%token` users may agree on three things: the account balance of every `@p` on the ledger, the set of `@p`s that are authorized to validate new blocks, and the set of `@p`s that have been disallowed from adding new blocks due to established bad behavior. 
+* Establish a canonical Urbit-native DNS alternative. Allow users to register, buy, sell and renew arbitrary names on `%chain`. 
+    * For example, it should be possible to register a trademark such that one can query it and resolve to a registered Urbit ID under that trademark. It should also be possible for a developer to attest the Hoon definition of a mark file on chain, to avoid the need for ad-hoc social consensus around marks. 
+* Provide a plausible new home for the Urbit PKI, such that it no longer needs to live on Ethereum. Offer a way to simplify the core Urbit codebase and reduce external dependencies. 
+* Allow users and developers to mint and distribute novel tokens of their own creation, both of the fungible and non-fungible varieties, and integrate these tokens into their own applications.
+* Allow users and developers to create DAOs on-chain, defined as a set of `@p`s and a denotation of privileges between them, in order to create social networks that are more fault-tolerant than federated groups and forums. 
+* Integrate `%chain` with other blockchain environments, such as Cosmos Hub, and enable users to bridge assets into `%chain` from other networks and vice versa. 
+* Create a smart contracting platform that integrates with Urbit applications. Allow developers to write smart contracts in Hoon (or any Nock-compiled language) and publish them to `%chain`. 
 
-Please note that the real implementation of `%token` should used versioned states and versioned data structures, and this versioning boilerplate has been omitted for simplicity. 
-### Proof of Identity Protocol
+The feasibility of each of these goals will need to be held in tension with the overall goal of permanent standardization. For example, a PKI integration may not be possible if it necessitates a constant compatibility layer with Ethereum that is liable to change. For a different example, a smart contracting platform may incur a never-ending arms race against attackers and competitors, which could prevent standardization. 
 
-A `chain` is simply described as a list of `block`s. A more scalable implementation of `%token` might store the `chain` as a serialized data structure rather than a linked list. In any case, a `(list block)` should be possible to reconstruct from a given `chain`. 
+## Strategy
 
-A `block` must have the necessary information to:
-* Establish the block's order in reference to the other blocks in the chain (block height, `hght`)
-* Attest the hash of the previous block height (`prev`) 
-* Attest the hash of all of its own transactions as a Merkle Root (`root`)
-* Stamp the time at which the block was minted (`stmp`)
-* Provide a list of transactions to be included in the block (`txns`)
-* Provide the identity of the entity submitting the block (`mint`)
-* Establish whether or not this block is a null-block, slashing its intended minter (`slsh`)
+As of this writing, there is more natural language writing about `%chain` than there is code in the repo. The project's strategy has rapidly shifted since its inception and is liable to continue to change. The goals outlined above can be looked at as a guidestone, and the Kelvin Zero objective as the north star. 
 
-```hoon
-+$  chain  (list block)
-+$  block
-  $:
-    hght=@ud
-    prev=@uvH
-    root=@uvH
-    stmp=@da
-    txns=(list txn)
-    mint=@p
-    slsh=?
-  ==
-```
+There does not yet exist a BFT-SMR network on Urbit. Some attempts have been made to reach or approximate this goal, but as of this writing none of them are active. There is a project called Nockchain that aims to build a blockchain with a great degree of compatibility with Urbit applications, but it is not itself an Urbit application, nor is it running natively on the Urbit network. 
 
-The Proof of Identity Protocol follows rather straightforwardly out of these data structures. It can be summarized as follows:
+The opinion of the `%chain` developers is that BFT-SMR, normally considered an incredibly difficult problem domain, is well-suited to Urbit's application model. In particular, programmer overhead for messaging, broadcast, discovery, sybil resistance, cryptography, and much more is handled natively by Urbit OS. There is still an inherent perniciousness to the details of consensus algorithms, but the overhead is drastically reduced in any case. 
 
-* The original state of the chain can be assumed to be the following: a single validator who holds 100% of the tokens is the only validator in the set. 
-    * For example, imagine the chain begins on `~zod` and consists of `1.000.000` tokens. The `shared-state` prior to any blocks would be as follows:
-        * `ledger: {~zod: 1.000.000}`
-        * `validators: {~zod}`
-        * `blacklist: ~`
-    * This is a separate question from the initial token allocation, which will consist of transactions performed by the minter of the genesis block. 
-* A genesis block is submitted, containing zero transactions. 
-* Full nodes that have the full state of the chain will go into the following main loop:
-    * A validator is elected based on a deterministic function from the last state of the chain. The height of the last block is used as entropy to generate a random number between `0` and `(dec (lent validators))`. This random number is mapped to an index in `validators` and the resulting `@p` of that index is elected to validate the next block.
-    * All of the full nodes subscribe to the elected validator to await a new block. 
-    * The elected validator, along with the other validators, gossip transactions around the network. 
-    * The elected validator checks the signatures of gossiped transactions. If the signatures are valid, it adds them to the block. 
-    * When a list of transactions has been completed, the validator signs the block and releases it. 
-        * Creating this signature and constructing a valid block is a complex process that we will black box for the time being in this spec. 
-    * If the block is valid, the full nodes add the block to their chain and repeat the loop. The validator claims the `bid` token values from the submitted transactions. 
-    * If the block is invalid, the full nodes reject the block and continue to wait for a valid block from the validator. 
-    * If a specified time has passed (to be determined based on network performance during testing) and no valid block has been submitted, the full nodes add a null block to the chain and elect a new validator and repeat the loop. 
-        * The `mint` value of the null block is the `@p` of the validator whose turn it was to submit a block. 
-        * The cryptographic hashes of the null block are null.
-        * The `slsh` value is set to `%.y`, indicating that the `mint` validator is to be slashed. 
-        * The shared state of the chain is updated to add the validator to the blacklist with a timestamp of `(add stmp d)` where `stmp` is used from the previous block and `d` is the hard-coded time limit to submit a valid block.
-    * A blacklisted `@p` will be excluded from the eligible validator set for a specified time, such as three months. (the specified time will be hard-coded and should be decided as a result of testing)
+We will begin by creating a reference implementation for two BFT consensus algorithms, `%lockstep` and `%frontier`, to investigate the suitability of two competing approaches to BFT-SMR within the context of an Urbit application. 
+  * `%lockstep` is inspired by the Tendermint protocol and aims to carefully keep a set of nodes in sync with each other as state transformations are voted on throughout a network, providing instant finality when a change is finally accepted. 
+  * `%frontier` is inspired by the Avalanche protocol and allows nodes to keep a local state that is continuously updated by polling the network, with a guarantee to converge towards metastability at a dominant polling result. 
 
-## Justification
+Both protocols will assume that every validator is either a star or a galaxy. To begin, the assumption may also be made that only planets, stars, and galaxies can participate and create transactions -- this will delay the need to implement fee/reward mechanisms too early. 
 
-Previous attempts to build a Byzantine fault-tolerant consensus network on Urbit have failed. I posit that it is necessary to think through the Urbit-blockchain relationship from scratch, lean into Urbit's strengths, and design for simplicity over power. `%token` explicitly opts out of compatibility, composability, scalability, or generality contests and instead provides only what it says on the box: a plausibly secure consensus network that maps an Urbit ID to a `$TOKEN` balance. 
+We will try one or both of our consensus algorithms with a test network that implements a payments system and a cryptocurrency `$TOKEN` live on Urbit. We will then iterate on this live test network continuously until the network is proven seaworthy enough for an official launch. 
 
-`$TOKEN` does not claim to be money and has no ideological or investment thesis. It is simply a token that can be deposited by its owner. 
-
-If `%token` is successful, it should inspire a fair array of derivative art, which could feasibly be more powerful. However, if `%token` is created quickly enough to be the first mover on Mars, and simply enough to be kelvin versioned, `$TOKEN` may retain some long-term value. 
+Upon official launch, a Kelvin version will be assigned to the `%chain` codebase, and a steadfast commitment to the Kelvin versioning discipline will be maintained until the protocol is frozen as a standard. 
