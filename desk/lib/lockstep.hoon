@@ -1,8 +1,8 @@
 :: types
 |%
-+$  bootstrap  [%bootstrap ts=@da]
 +$  action
-  $%  [%broadcast =qc]
+  $%  [%start ts=@da]
+      [%broadcast =qc]
       [%vote vote]  :: eventually we get gossip votes so this should be annotated with voter+signature
   ==
 
@@ -19,9 +19,9 @@
 ::     %precommit
 ::     %commit
 ::   ==
-+$  step  $?(%1 %2 %3 %4)  :: stage of the app, see above
-+$  stage  $?(%1 %2)  :: voting stage
-++  delta  ~s5  :: time between steps
++$  step  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
++$  stage  $?(%2 %1)  :: voting stage
+++  delta  ~s2  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  =block
@@ -39,6 +39,7 @@
     ~nec
     ~bud
     ~wes
+    :: ~rus
 ==
 ::  functions
 :: ++  quorum

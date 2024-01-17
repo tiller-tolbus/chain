@@ -34,29 +34,38 @@ $:  %0
 ++  on-fail   |~(* `this)
 ++  on-save   !>(state)
 ++  on-load   |=  old-state=vase 
-=/  prev  !<(state-0 old-state)
-`this(state prev)
+:: =/  prev  !<(state-0 old-state)
+:: `this(state prev)
+`this(robin nodes)
 ::
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
 |=  [=mark =vase]
+~&  poked=[mark vase]
 |^
-?:  ?=(%start mark)
-  =/  action  !<(bootstrap vase)  :: TODO crash alert
-  =.  state
-  %=  state
-    block  [eny.bowl src.bowl ts.action]
-    qc     [[block height round %1] ~]
-  ==
-  ?~  robin  `this
-  ?.  .=(src.bowl i.robin)  `this
-  :_  this  :_  ~  (timer-card ts.action)
-  ::
-?.  ?=(%lockstep mark)  `this
-  =/  action  !<(action vase)  :: TODO crash alert
+?.  ?=(%noun mark)  `this
+  =/  uaction  ((soft action) q.vase)  :: TODO crash alert
+    ~&  >  action=uaction
+  ?~  uaction  `this
+  =/  action  u.uaction
   ?-  -.action
-    %broadcast  (handle-broadcast +.action)
-    %vote       (handle-vote +.action)
+  %start
+    ?.  =(*^block block)  `this
+    =/  init-block   [eny.bowl src.bowl ts.action]
+    =.  state
+    %=  state
+      block   init-block
+      qc     [[init-block height round %1] ~]
+    ==
+    ?~  robin  `this
+    ?.  .=(src.bowl i.robin)  `this
+    :_  this  
+    :-  (timer-card:hd ts.action)
+        (bootstrap-cards:hd ts.action)
+      
+  ::
+  %broadcast  (handle-broadcast +.action)
+  %vote       (handle-vote +.action)
   ==
   ++  handle-broadcast
   |=  =^qc  ^-  (quip card _this)
@@ -87,6 +96,7 @@ $:  %0
 |=  [=(pole knot) =sign-arvo]  
 |^
   ?.  ?=(%behn -.sign-arvo)  `this
+    ~&  >  timer-pinged=[pole step]
   ?+  pole  `this
     [%step ~]  
       ?-  step
@@ -156,7 +166,6 @@ $:  %0
                 ~&  >>  block-commited=block.i.valid
                 (snoc history block.i.valid)  
               height  +(height)
-              step  %1
               new-cards  (weld new-cards (broadcast-cards:hd i.valid))
               valid  t.valid
             ==
@@ -165,9 +174,13 @@ $:  %0
   %=  this
     round  +(round)
     robin  shuffle-robin
+    step  %1
   ==
   ++  addendum
-  :_  this  addendum-card^~
+  :_  this  
+  :~  addendum-card
+      (timer-card:hd now.bowl)
+  ==
   ++  shuffle-robin
   ?~  robin  robin
   (snoc t.robin i.robin)
@@ -265,15 +278,19 @@ $:  %0
 
 ++  broadcast-card
 |=  [p=^qc sip=ship]  ^-  card
-
-[%pass /wire %agent [sip %lockstep] %poke [%lockstep !>([%broadcast p])]]
+[%pass /wire %agent [sip %lockstep] %poke [%noun !>([%broadcast p])]]
 ++  vote-card
 |=  [=vote sip=@p]
-[%pass /wire %agent [sip %lockstep] %poke [%lockstep !>([%vote vote])]]
+[%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote vote])]]
 ++  addendum-card  ^-  card
 [%pass /addendum %arvo %b %wait (add delta (sub now.bowl (div ~s1 100)))]
 ++  timer-card  
 |=  ts=@da
+~&  timer-card=ts
 ^-  card
 [%pass /step %arvo %b %wait (add ts delta)]
+++  bootstrap-cards
+|=  ts=@da
+%+  turn  nodes  |=  sip=@p
+[%pass /wire %agent [sip %lockstep] %poke [%noun !>([%start ts])]]
 --
