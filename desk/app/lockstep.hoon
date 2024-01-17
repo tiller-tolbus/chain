@@ -55,7 +55,12 @@ $:  %0
 |^
 ?.  ?=(%noun mark)  `this
   ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd  
-  ?:  ?=(%print q.vase)   ~&  >>  state  `this  
+  :: ?:  ?=(%print q.vase)   ~&  >>  state  `this  
+  ?:  ?=(%print q.vase)   
+  =/  his  (flop history)
+  ?~  his  ~&  >>>  "no blocks found"  `this
+  ~&  >>  last-block=i.his 
+  `this  
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
   =/  action  u.uaction
