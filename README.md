@@ -28,7 +28,7 @@ The feasibility of each of these goals will need to be held in tension with the 
 
 ## Strategy
 
-As of this writing, there is more natural language writing about `%chain` than there is code in the repo. The project's strategy has rapidly shifted since its inception and is liable to continue to change. The goals outlined above can be looked at as a guidestone, and the Kelvin Zero objective as the north star. 
+The `%chain` project's strategy has rapidly shifted since its inception and is liable to continue to change. The goals outlined above can be looked at as a guidestone, and the Kelvin Zero objective as the north star. 
 
 There does not yet exist a BFT-SMR network on Urbit. Some attempts have been made to reach or approximate this goal, but as of this writing none of them are active. There is a project called Nockchain that aims to build a blockchain with a great degree of compatibility with Urbit applications, but it is not itself an Urbit application, nor is it running natively on the Urbit network. 
 
