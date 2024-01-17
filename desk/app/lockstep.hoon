@@ -28,7 +28,7 @@ $:  %0
     hd  ~(. +> bowl)
 ::
 ++  on-init  
-~&  " "
+~&  ""
 ~&  >  "%chain initialized"
 :_  this(robin nodes)
 ~
@@ -45,6 +45,8 @@ $:  %0
 |=  [=mark =vase]
 |^
 ?.  ?=(%noun mark)  `this
+  ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd  
+  ?:  ?=(%print q.vase)   ~&  >>  state  `this  
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
   =/  action  u.uaction
@@ -184,7 +186,7 @@ $:  %0
   ++  increment-round
   %=  this
     round  +(round)
-    :: robin  shuffle-robin
+    robin  shuffle-robin
     step  %1
   ==
   ++  addendum
@@ -234,7 +236,6 @@ $:  %0
 =/  leader  i.robin
 %+  roll  ~(tap by vote-store) 
 |=  [i=^qc acc=(unit ^qc)]
-~&  >>>  [mint.block.i leader height height.i]
 ?.  =(mint.block.i leader)  acc
 ?.  =(height height.i)  acc
 ?~  acc  (some i)
@@ -311,4 +312,7 @@ $:  %0
 |=  ts=@da
 %+  turn  nodes  |=  sip=@p
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%start ts])]]
+++  dbug-cards
+%+  turn  nodes  |=  sip=@p
+[%pass /wire %agent [sip %lockstep] %poke [%noun !>(%print)]]
 --
