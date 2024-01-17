@@ -33,14 +33,9 @@ $:  %0
     hd  ~(. +> bowl)
 ::
 ++  on-init  
-~&  " "
+~&  ""
 ~&  >  "%chain initialized"
-:_  this(robin nodes)
-^-  (list card)
-:~  [%pass /private-keys %arvo %j %private-keys ~]
-::  subscribe to pki-store updates
-    [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
-==
+:_  this(robin nodes)  watch-cards:hd
 ++  on-leave  |~(* `this)
 ++  on-fail   |~(* `this)
 ++  on-save   !>(state)
@@ -54,13 +49,18 @@ $:  %0
 |=  [=mark =vase]
 |^
 ?.  ?=(%noun mark)  `this
-  ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd  
+  ?:  ?=(%reset q.vase)      :_  this  nuke-cards:hd  
+  ?:  ?=(%allfakes q.vase)  :_  this  fake-pki-cards:hd  
+  ?:  ?=(%sprint q.vase)    :_  this  dbug-cards:hd  
   :: ?:  ?=(%print q.vase)   ~&  >>  state  `this  
   ?:  ?=(%print q.vase)   
   =/  his  (flop history)
   ?~  his  ~&  >>>  "no blocks found"  `this
   ~&  >>  last-block=i.his 
   `this  
+  ?:  ?=(%nuke q.vase)   
+    :_  this(state *_state)  watch-cards:hd  
+    
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
   =/  action  u.uaction
@@ -339,7 +339,18 @@ $:  %0
 |=  =^qc  ^-  ?
 ::  signature validation goes here
 %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
+++  find-time  ^-  @da
+%+  add  start-time
+%+  mul  delta
+%+  add  
+%+  mul  4  round
+(dec step)
 ::  cards
+++  watch-cards  ^-  (list card)
+:~  [%pass /private-keys %arvo %j %private-keys ~]
+::  subscribe to pki-store updates
+    [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
+==
 ++  broadcast-and-vote
 |=  [p=^qc =vote]
 =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
@@ -363,12 +374,6 @@ $:  %0
 ++  addendum-card  ^-  card
 [%pass /addendum %arvo %b %wait (add delta (sub now.bowl (div ~s1 100)))]
 ::
-++  find-time  ^-  @da
-%+  add  start-time
-%+  mul  delta
-%+  add  
-%+  mul  4  round
-(dec step)
 ::
 ++  timer-card  
 ~&  timer-card=find-time
@@ -381,4 +386,10 @@ $:  %0
 ++  dbug-cards
 %+  turn  nodes  |=  sip=@p
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>(%print)]]
+++  fake-pki-cards
+%+  turn  nodes  |=  sip=@p
+[%pass /wire %agent [sip %pki-store] %poke [%noun !>(%set-fake)]]
+++  nuke-cards
+%+  turn  nodes  |=  sip=@p
+[%pass /wire %agent [sip %lockstep] %poke [%noun !>(%nuke)]]
 --
