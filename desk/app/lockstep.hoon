@@ -106,7 +106,6 @@ $:  %0
   =/  voter-keys  (~(get bi:mip pki-store) src.bowl r.s)
   ?~  voter-keys  ~&  "no keys found"  `this
   =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
-  ~&  >>>  "validating vote signature"
   =/  ver  (sure:as:crub p.s)
   ~&  >>>  "validation done"
   ?~  ver  ~&  "leader signature on block untrue"  `this
@@ -120,7 +119,6 @@ $:  %0
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-agent  
 |=  [=(pole knot) =sign:agent:gall]
-~&  on-agent=[src.bowl dap.bowl -.sign pole]
 ~>  %bout.[0 '%lockstep +on-agent']
 ?+  pole  `this
 [%pki-store ~]
@@ -164,7 +162,6 @@ $:  %0
             [vote ~]
         ::
         %2  =/  lbl  latest-by-leader:hd
-            ~&  latest-by-leader=lbl
             ?~  lbl  bail       
             =/  we-behind  (as-recent-qc:hd u.lbl qc)
             ~&  we-behind=we-behind
@@ -176,7 +173,7 @@ $:  %0
             ==
             :_  increment-step  
             =/  =vote  [block.u.lbl height round %1]
-            ~&  >>  voting=vote
+            ~&  >>  voting=[height round %1]
             (broadcast-and-vote:hd u.lbl vote)
                      
         %3  =/  valid  (valid-qcs:hd %1) 
@@ -189,7 +186,7 @@ $:  %0
             ==
             :_  increment-step
             =/  vote  [block.i.valid height round %2]
-            ~&  >>  voting=vote
+            ~&  >>  voting=[height round %2]
             (broadcast-and-vote:hd i.valid vote)
             
         %4  =/  valid  (valid-qcs:hd %2)         
@@ -277,9 +274,12 @@ $:  %0
 
 ++  valid-qcs  
 |=  stage=?(%1 %2)
+~&  checking-qcs-for-stage=stage
 ^-  (list ^qc)  ::  there should only be one but w/e
+~&  checking-qcs=[stage round height]
 %+  skim  ~(tap by vote-store)
 |=  i=^qc  ^-  ?
+:: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
 ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
     .=(height height.i)
     .=(round round.i)
@@ -301,15 +301,7 @@ $:  %0
 =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
 ?~  leader-keys  acc
 =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
-~&  >>>  "validating leader signature"
-
-
 =/  s=signature  -.block.i
-=/  bl=^block    +.block.i
-~&  block-to-validate=bl
-=/  to-val=[sig=@ msg=@]  :-  p.s  (jam bl)    
-~&  passing-this-to-crub=to-val
-
 =/  ver  (sure:as:crub p.s)
 ~&  "validation done"
 ?~  ver  ~&  "leader signature on block untrue"  acc

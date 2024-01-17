@@ -23,7 +23,7 @@
 ::   ==
 +$  step  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
-++  delta  ~s2  :: time between steps
+++  delta  ~s5  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  block=signed-block
