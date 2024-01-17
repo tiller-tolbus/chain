@@ -33,7 +33,7 @@ $:  %0
     hd  ~(. +> bowl)
 ::
 ++  on-init  
-~&  ""
+~&  " "
 ~&  >  "%chain initialized"
 :_  this(robin nodes)
 ^-  (list card)
@@ -62,7 +62,7 @@ $:  %0
   ~&  >  action=[src.bowl -.action]
   ?-  -.action
   %start
-    ?.  =(*^block block)  `this
+    ?.  =(*signed-block block)  `this
     =/  init-block   [eny.bowl ts.action height]
     =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
     =/  new-block  [signature init-block]
