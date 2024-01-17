@@ -14,6 +14,7 @@ $:  %0
     =round
     =step
     =history
+    start-time=@da
 ==
 +$  card  card:agent:gall
 --
@@ -41,11 +42,10 @@ $:  %0
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
 |=  [=mark =vase]
-~&  poked=[mark vase]
 |^
 ?.  ?=(%noun mark)  `this
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
-    ~&  >  action=uaction
+    ~&  >  action=[src.bowl uaction]
   ?~  uaction  `this
   =/  action  u.uaction
   ?-  -.action
@@ -56,11 +56,12 @@ $:  %0
     %=  state
       block   init-block
       qc     [[init-block height round %1] ~]
+      start-time  ts.action
     ==
     ?~  robin  `this
     ?.  .=(src.bowl i.robin)  `this
     :_  this  
-    :-  (timer-card:hd ts.action)
+    :-  timer-card:hd
         (bootstrap-cards:hd ts.action)
       
   ::
@@ -179,7 +180,7 @@ $:  %0
   ++  addendum
   :_  this  
   :~  addendum-card
-      (timer-card:hd now.bowl)
+      timer-card:hd
   ==
   ++  shuffle-robin
   ?~  robin  robin
@@ -188,7 +189,7 @@ $:  %0
   =/  new-step  ?-(step %1 %2, %2 %3, %3 %4, %4 %1)
   this(step new-step)
   ++  bail
-  :_  increment-step  (timer-card:hd now.bowl)^~
+  :_  increment-step  :~(timer-card:hd)
   --
 --
 |_   =bowl:gall
@@ -265,7 +266,7 @@ $:  %0
 ::  cards
 ++  broadcast-and-vote
 |=  [p=^qc =vote]
-:-  (timer-card now.bowl)
+:-  timer-card
 %+  roll  nodes  |=  [i=@p acc=(list card)]
 %+  weld  acc
 :~  (broadcast-card p i)
@@ -273,7 +274,7 @@ $:  %0
 ==
 ++  broadcast-cards
 |=  p=^qc  ^-  (list card)
-  :-  (timer-card now.bowl)
+  :-  timer-card
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
 
 ++  broadcast-card
@@ -284,11 +285,18 @@ $:  %0
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote vote])]]
 ++  addendum-card  ^-  card
 [%pass /addendum %arvo %b %wait (add delta (sub now.bowl (div ~s1 100)))]
+::
+++  find-time  ^-  @da
+%+  add  start-time
+%+  mul  delta
+%+  add  
+%+  mul  4  round
+(dec step)
+::
 ++  timer-card  
-|=  ts=@da
-~&  timer-card=ts
+~&  timer-card=find-time
 ^-  card
-[%pass /step %arvo %b %wait (add ts delta)]
+[%pass /step %arvo %b %wait find-time]
 ++  bootstrap-cards
 |=  ts=@da
 %+  turn  nodes  |=  sip=@p
