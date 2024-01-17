@@ -12,6 +12,7 @@
 +$  state-zero
   $:  %zero
       =pki-store
+      fake=_|
   ==
 +$  card  card:agent:gall
 +$  sign  sign:agent:gall
@@ -43,9 +44,34 @@
   `this(state !<(state-zero old-state))
 ::
 ++  on-poke
-  |=  =cage
-  ^-  (quip card _this)
-  !!
+  |=  [=mark =vase]
+  |^
+    ^-  (quip card _this)
+    ?.  ?=(%noun mark)  `this
+    ?:  ?=(%set-fake q.vase)
+      ~&  >  pki-store-setting-fake=[src.bowl]
+      =/  fake-store  populate-fake-store
+      :_  %=  this
+            fake  .y
+            pki-store  fake-store
+          ==
+      :~  [%pass /pki-store %agent [our.bowl %azimuth] %leave ~]
+          [%give %fact ~[/pki-diffs] %pki-snapshot !>(fake-store)]
+      ==
+    `this
+    ++  populate-fake-store  ^+  pki-store
+    =/  store  *^pki-store
+    :: =/  ships  (gulf ~zod ~fipfes)
+    :: =/  ships  (gulf ~zod ~fes)
+    =/  ships  (gulf ~zod ~wes)
+    |-
+    ?~  ships  store
+    =+  .^([=life =pass (unit @ux)] %j /(scot %p our.bowl)/deed/(scot %da now.bowl)/(scot %p i.ships)/1)
+    %=  $
+      store  (~(put bi store) i.ships life pass)
+      ships  t.ships
+    ==
+  --
 ::
 ++  on-watch
   |=  =path
@@ -71,7 +97,7 @@
 ++  on-agent
   |=  [=wire =sign]
   ~>  %bout.[0 '%pki-store %on-agent']
-  ~&  [wire -.sign]
+  ~&  pki-store=[wire -.sign]
   ^-  (quip card _this)
   ?.  ?=([%pki-store ~] wire)
     (on-agent:def wire sign)
