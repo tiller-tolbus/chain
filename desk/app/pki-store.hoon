@@ -49,7 +49,7 @@
     ^-  (quip card _this)
     ?.  ?=(%noun mark)  `this
     ?:  ?=(%set-fake q.vase)
-      ~&  "pki-store-setting-fake"
+      ~&  >  pki-store-setting-fake=[src.bowl]
       =/  fake-store  populate-fake-store
       :_  %=  this
             fake  .y
@@ -65,11 +65,8 @@
     :: =/  ships  (gulf ~zod ~fes)
     =/  ships  (gulf ~zod ~wes)
     |-
-    ~&  iterating=ships
     ?~  ships  store
-    ~&  >>  "attempting jael scry"
     =+  .^([=life =pass (unit @ux)] %j /(scot %p our.bowl)/deed/(scot %da now.bowl)/(scot %p i.ships)/1)
-    ~&  "that worked"
     %=  $
       store  (~(put bi store) i.ships life pass)
       ships  t.ships
@@ -100,7 +97,7 @@
 ++  on-agent
   |=  [=wire =sign]
   ~>  %bout.[0 '%pki-store %on-agent']
-  ~&  [wire -.sign]
+  ~&  pki-store=[wire -.sign]
   ^-  (quip card _this)
   ?.  ?=([%pki-store ~] wire)
     (on-agent:def wire sign)

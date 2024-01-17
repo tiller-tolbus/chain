@@ -15,7 +15,7 @@ $:  %0
     =round
     =step
     =history
-    start-time=@da
+    start-time=_~2050.1.1
     ::  keys
     our-life=@ud
     keys=acru:ames
@@ -33,7 +33,7 @@ $:  %0
     hd  ~(. +> bowl)
 ::
 ++  on-init  
-~&  ""
+~&  " "
 ~&  >  "%chain initialized"
 :_  this(robin nodes)  watch-cards:hd
 ++  on-leave  |~(* `this)
@@ -42,7 +42,7 @@ $:  %0
 ++  on-load   |=  old-state=vase 
 :: =/  prev  !<(state-0 old-state)
 :: `this(state prev)
-`this(robin nodes, start-time ~2050.1.1)
+`this(robin nodes)
 ::
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
@@ -50,7 +50,6 @@ $:  %0
 |^
 ?.  ?=(%noun mark)  `this
   ?:  ?=(%reset q.vase)      :_  this  nuke-cards:hd  
-  ?:  ?=(%allfakes q.vase)  :_  this  fake-pki-cards:hd  
   ?:  ?=(%sprint q.vase)    :_  this  dbug-cards:hd  
   :: ?:  ?=(%print q.vase)   ~&  >>  state  `this  
   ?:  ?=(%print q.vase)   
@@ -59,7 +58,9 @@ $:  %0
   ~&  >>  last-block=i.his 
   `this  
   ?:  ?=(%nuke q.vase)   
-    :_  this(state *_state)  watch-cards:hd  
+    ~&  "nucking state"
+    =.  state  *state-0
+    :_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd] 
     
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
@@ -67,8 +68,9 @@ $:  %0
   ~&  >  action=[src.bowl -.action]
   ?-  -.action
   %start
-    ?.  =(*signed-block block)  `this
-    =/  init-block   [eny.bowl ts.action height]
+    ?.  =(*signed-block block)  ~&  "block on state not bunt"  `this
+    =/  init-block=^block   [eny.bowl ts.action height]
+    ~&  >  signing-block=init-block
     =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
     =/  new-block  [signature init-block]
     =.  state
@@ -104,7 +106,9 @@ $:  %0
   =/  voter-keys  (~(get bi:mip pki-store) src.bowl r.s)
   ?~  voter-keys  ~&  "no keys found"  `this
   =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
-  =/  ver  (sure:as:crub (jam vote))
+  ~&  >>>  "validating vote signature"
+  =/  ver  (sure:as:crub p.s)
+  ~&  >>>  "validation done"
   ?~  ver  ~&  "leader signature on block untrue"  `this
   :-  ~
   =/  old-quorum  (~(get by vote-store) vote)
@@ -116,7 +120,7 @@ $:  %0
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-agent  
 |=  [=(pole knot) =sign:agent:gall]
-~&  on-agent=pole
+~&  on-agent=[src.bowl dap.bowl -.sign pole]
 ~>  %bout.[0 '%lockstep +on-agent']
 ?+  pole  `this
 [%pki-store ~]
@@ -124,9 +128,8 @@ $:  %0
     %fact
       ?+  p.cage.sign  ~&([%bad-mark p.cage.sign] `this)
           %pki-snapshot
-          ~&  "snapshot-received" 
+          ~&  >>  "pki-snapshot-received" 
         =/  new-pki-store  !<(pki-store:pki q.cage.sign)
-        ~&  "hi"
         [~ this(pki-store new-pki-store)]
           %pki-diff
         =/  entry  !<(pki-entry:pki q.cage.sign)
@@ -158,7 +161,6 @@ $:  %0
             ==
             :_  increment-step  %-  broadcast-cards:hd
             =/  =vote  [block height round %1]
-            ~&  muh-vote=vote
             [vote ~]
         ::
         %2  =/  lbl  latest-by-leader:hd
@@ -178,7 +180,7 @@ $:  %0
             (broadcast-and-vote:hd u.lbl vote)
                      
         %3  =/  valid  (valid-qcs:hd %1) 
-            ~&  valid-qcs=valid
+            ~&  valid-stage1-qcs=valid
             ?~  valid  bail
             =.  state
             %=  state
@@ -191,7 +193,7 @@ $:  %0
             (broadcast-and-vote:hd i.valid vote)
             
         %4  =/  valid  (valid-qcs:hd %2)         
-            ~&  valid-qcs=valid
+            ~&  valid-stage2-qcs=valid
             ?~  valid  addendum
             =/  init-block  [eny.bowl now.bowl +(height)]            
             =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
@@ -299,7 +301,17 @@ $:  %0
 =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
 ?~  leader-keys  acc
 =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
-=/  ver  (sure:as:crub (jam q.block.i))
+~&  >>>  "validating leader signature"
+
+
+=/  s=signature  -.block.i
+=/  bl=^block    +.block.i
+~&  block-to-validate=bl
+=/  to-val=[sig=@ msg=@]  :-  p.s  (jam bl)    
+~&  passing-this-to-crub=to-val
+
+=/  ver  (sure:as:crub p.s)
+~&  "validation done"
 ?~  ver  ~&  "leader signature on block untrue"  acc
 ::
 ?.  =(height height.i)  acc
@@ -386,9 +398,8 @@ $:  %0
 ++  dbug-cards
 %+  turn  nodes  |=  sip=@p
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>(%print)]]
-++  fake-pki-cards
-%+  turn  nodes  |=  sip=@p
-[%pass /wire %agent [sip %pki-store] %poke [%noun !>(%set-fake)]]
+++  fake-pki-card
+[%pass /wire %agent [our.bowl %pki-store] %poke [%noun !>(%set-fake)]]
 ++  nuke-cards
 %+  turn  nodes  |=  sip=@p
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>(%nuke)]]
