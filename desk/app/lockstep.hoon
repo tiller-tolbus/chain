@@ -55,7 +55,7 @@ $:  %0
   ?:  ?=(%print q.vase)   
   =/  his  (flop history)
   ?~  his  ~&  >>>  "no blocks found"  `this
-  ~&  >>  last-block=i.his 
+  ~&  >>  last-block=q.p.i.his 
   `this  
   ?:  ?=(%nuke q.vase)   
     ~&  "nucking state"
@@ -65,7 +65,7 @@ $:  %0
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
   =/  action  u.uaction
-  ~&  >  action=[src.bowl -.action]
+  :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
   %start
     ?.  =(*signed-block block)  ~&  "block on state not bunt"  `this
@@ -102,12 +102,10 @@ $:  %0
   ++  handle-vote
   |=  [s=signature =vote]
   ?.  =(height.vote height)  `this
-  ::  signature-validation
   =/  voter-keys  (~(get bi:mip pki-store) src.bowl r.s)
   ?~  voter-keys  ~&  "no keys found"  `this
   =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
   =/  ver  (sure:as:crub p.s)
-  ~&  >>>  "validation done"
   ?~  ver  ~&  "leader signature on block untrue"  `this
   :-  ~
   =/  old-quorum  (~(get by vote-store) vote)
@@ -119,7 +117,7 @@ $:  %0
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-agent  
 |=  [=(pole knot) =sign:agent:gall]
-~>  %bout.[0 '%lockstep +on-agent']
+:: ~>  %bout.[0 '%lockstep +on-agent']
 ?+  pole  `this
 [%pki-store ~]
   ?+  -.sign  `this
@@ -148,7 +146,7 @@ $:  %0
       ?-  step
         %1  
           ?~  robin  bail
-          ~&  >>>  leader=i.robin
+          ~&  >>  leader=i.robin
           ?.  .=(our.bowl i.robin)  bail
           =/  most-recent  find-most-recent:hd
           ~&  most-recent=most-recent
@@ -158,13 +156,16 @@ $:  %0
               qc     u.most-recent
             ==
             :_  increment-step  %-  broadcast-cards:hd
-            =/  =vote  [block height round %1]
+            =/  =vote  [block.state height round %1]
+            ~&  >  leader-vote=[height=height round=round]
             [vote ~]
         ::
         %2  =/  lbl  latest-by-leader:hd
-            ?~  lbl  bail       
+            ::  this logic is faulty
+            ?~  lbl  ~&  "no recent vote from leader found"  bail       
             =/  we-behind  (as-recent-qc:hd u.lbl qc)
-            ~&  we-behind=we-behind
+            ~&  >>>  we-behind=we-behind
+            ::  fix this shit
             ?.  we-behind  bail
             =.  state
             %=  state
@@ -177,8 +178,7 @@ $:  %0
             (broadcast-and-vote:hd u.lbl vote)
                      
         %3  =/  valid  (valid-qcs:hd %1) 
-            ~&  valid-stage1-qcs=valid
-            ?~  valid  bail
+            ?~  valid  ~&  "no valid qcs at stage 1"  bail
             =.  state
             %=  state
               block  block.i.valid
@@ -190,15 +190,14 @@ $:  %0
             (broadcast-and-vote:hd i.valid vote)
             
         %4  =/  valid  (valid-qcs:hd %2)         
-            ~&  valid-stage2-qcs=valid
-            ?~  valid  addendum
+            ?~  valid  ~&  "no valid qcs at stage 2"  addendum
             =/  init-block  [eny.bowl now.bowl +(height)]            
             =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
             =/  new-block  [signature init-block]
             =.  state
             %=  state
               history  
-                ~&  >>  block-commited=block.i.valid
+                ~&  >>  block-commited=[h=height r=round who=q.p.block.i.valid noun=(@uw noun.q.block.i.valid)]
                 (snoc history [p=block.i.valid q=i.valid])  
               height  +(height)
               block  new-block
@@ -218,7 +217,7 @@ $:  %0
             =/  new-block  [signature init-block]
             %=  $
               history  
-                ~&  >>  block-commited=block.i.valid
+                ~&  >>  block-commited=[h=height r=round who=q.p.block.i.valid noun=(@uw noun.q.block.i.valid)]
                 (snoc history [block.i.valid i.valid])  
               height  +(height)
               block  new-block
@@ -235,7 +234,7 @@ $:  %0
   ==
   ++  addendum
   :_  this  
-  :~  addendum-card
+  :~  addendum-card:hd
       timer-card:hd
   ==
   ++  shuffle-robin
@@ -274,7 +273,6 @@ $:  %0
 
 ++  valid-qcs  
 |=  stage=?(%1 %2)
-~&  checking-qcs-for-stage=stage
 ^-  (list ^qc)  ::  there should only be one but w/e
 ~&  checking-qcs=[stage round height]
 %+  skim  ~(tap by vote-store)
@@ -294,6 +292,7 @@ $:  %0
 ++  latest-by-leader  ^-  (unit ^qc)
 ?~  robin  ~
 =/  leader  i.robin
+~&  leader=[leader our.bowl height round]
 %+  roll  ~(tap by vote-store) 
 |=  [i=^qc acc=(unit ^qc)]
 ?.  =(q.p.block.i leader)  acc
@@ -303,7 +302,6 @@ $:  %0
 =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
 =/  s=signature  -.block.i
 =/  ver  (sure:as:crub p.s)
-~&  "validation done"
 ?~  ver  ~&  "leader signature on block untrue"  acc
 ::
 ?.  =(height height.i)  acc
@@ -341,7 +339,6 @@ $:  %0
 ::
 ++  validate-qc
 |=  =^qc  ^-  ?
-::  signature validation goes here
 %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
 ++  find-time  ^-  @da
 %+  add  start-time
@@ -376,7 +373,8 @@ $:  %0
 |=  [s=signature =vote sip=@p]
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote [s vote]])]]
 ++  addendum-card  ^-  card
-[%pass /addendum %arvo %b %wait (add delta (sub now.bowl (div ~s1 100)))]
+=/  ts  (sub find-time (div ~s1 100))
+[%pass /addendum %arvo %b %wait ts]
 ::
 ::
 ++  timer-card  
