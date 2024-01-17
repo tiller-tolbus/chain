@@ -28,6 +28,7 @@ $:  %0
     hd  ~(. +> bowl)
 ::
 ++  on-init  
+~&  " "
 ~&  >  "%chain initialized"
 :_  this(robin nodes)
 ~
@@ -37,7 +38,7 @@ $:  %0
 ++  on-load   |=  old-state=vase 
 :: =/  prev  !<(state-0 old-state)
 :: `this(state prev)
-`this(robin nodes)
+`this(robin nodes, start-time ~2050.1.1)
 ::
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
@@ -45,9 +46,9 @@ $:  %0
 |^
 ?.  ?=(%noun mark)  `this
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
-    ~&  >  action=[src.bowl uaction]
   ?~  uaction  `this
   =/  action  u.uaction
+  ~&  >  action=[src.bowl -.action]
   ?-  -.action
   %start
     ?.  =(*^block block)  `this
@@ -103,8 +104,10 @@ $:  %0
       ?-  step
         %1  
           ?~  robin  bail
+          ~&  >>>  leader=i.robin
           ?.  .=(our.bowl i.robin)  bail
           =/  most-recent  find-most-recent:hd
+          ~&  most-recent=most-recent
           =.  state  ?~  most-recent  state
             %=  state
               block  block.u.most-recent
@@ -112,11 +115,14 @@ $:  %0
             ==
             :_  increment-step  %-  broadcast-cards:hd
             =/  =vote  [block height round %1]
+            ~&  muh-vote=vote
             [vote ~]
         ::
-        %2  =/  lbl  latest-by-leader
+        %2  =/  lbl  latest-by-leader:hd
+            ~&  latest-by-leader=lbl
             ?~  lbl  bail       
             =/  we-behind  (as-recent-qc:hd u.lbl qc)
+            ~&  we-behind=we-behind
             ?.  we-behind  bail
             =.  state
             %=  state
@@ -125,9 +131,11 @@ $:  %0
             ==
             :_  increment-step  
             =/  =vote  [block.u.lbl height round %1]
+            ~&  >>  voting=vote
             (broadcast-and-vote:hd u.lbl vote)
                      
-        %3  =/  valid  (valid-qcs %1) 
+        %3  =/  valid  (valid-qcs:hd %1) 
+            ~&  valid-qcs=valid
             ?~  valid  bail
             =.  state
             %=  state
@@ -136,9 +144,11 @@ $:  %0
             ==
             :_  increment-step
             =/  vote  [block.i.valid height round %2]
+            ~&  >>  voting=vote
             (broadcast-and-vote:hd i.valid vote)
             
-        %4  =/  valid  (valid-qcs %2)         
+        %4  =/  valid  (valid-qcs:hd %2)         
+            ~&  valid-qcs=valid
             ?~  valid  addendum
             =/  init-block  [eny.bowl our.bowl now.bowl]            
             =.  state
@@ -155,7 +165,7 @@ $:  %0
             (broadcast-cards:hd i.valid)
       ==
         [%addendum ~]  
-            =/  valid  future-blocks
+            =/  valid  future-blocks:hd
             =|  new-cards=(list card)         
             |-
             ?~  valid  :_  increment-round  new-cards
@@ -174,7 +184,7 @@ $:  %0
   ++  increment-round
   %=  this
     round  +(round)
-    robin  shuffle-robin
+    :: robin  shuffle-robin
     step  %1
   ==
   ++  addendum
@@ -224,9 +234,9 @@ $:  %0
 =/  leader  i.robin
 %+  roll  ~(tap by vote-store) 
 |=  [i=^qc acc=(unit ^qc)]
-?.  (validate-qc i)  acc
+~&  >>>  [mint.block.i leader height height.i]
 ?.  =(mint.block.i leader)  acc
-?.  =(height height.vote)  acc
+?.  =(height height.i)  acc
 ?~  acc  (some i)
 ?:  (more-recent-qc i u.acc)  (some i)  acc
 
@@ -234,7 +244,7 @@ $:  %0
 %+  roll  ~(tap by vote-store) 
 |=  [i=^qc acc=(unit ^qc)]
 ?.  (validate-qc i)  acc
-?.  =(height height.vote)  acc
+?.  =(height height.i)  acc
 ?~  acc  (some i)
 ?:  (more-recent-qc i u.acc)  (some i)  acc
 
