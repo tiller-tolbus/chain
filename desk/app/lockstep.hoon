@@ -68,7 +68,8 @@ $:  %0
   :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
   %start
-    ?.  =(*signed-block block)  ~&  "block on state not bunt"  `this
+    ?.  =(*signed-block block)  ~&  block-on-state-not-bunt=q.block  `this
+    ~&  "bootstrapping"
     =/  init-block=^block   [eny.bowl ts.action height]
     ~&  >  signing-block=init-block
     =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
@@ -91,6 +92,7 @@ $:  %0
   ==
   ++  handle-broadcast
   |=  =^qc  ^-  (quip card _this)
+  ~&  handling-broadcast=[src.bowl height.qc round.qc]
   ?:  (lth height.qc height)  `this
   :-  ~  
   =/  old-quorum  (~(get by vote-store) -.qc)
@@ -101,6 +103,7 @@ $:  %0
   ==
   ++  handle-vote
   |=  [s=signature =vote]
+  ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
   ?.  =(height.vote height)  `this
   =/  voter-keys  (~(get bi:mip pki-store) src.bowl r.s)
   ?~  voter-keys  ~&  "no keys found"  `this
