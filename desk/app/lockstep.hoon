@@ -39,53 +39,52 @@ $:  %0
 ++  on-leave  |~(* `this)
 ++  on-fail   |~(* `this)
 ++  on-save   !>(state)
-++  on-load   |=  old-state=vase 
-:: =/  prev  !<(state-0 old-state)
-:: `this(state prev)
-`this(robin nodes)
+++  on-load 
+  |=  old-state=vase 
+  :: =/  prev  !<(state-0 old-state)
+  :: `this(state prev)
+  `this(robin nodes)
 ::
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
-|=  [=mark =vase]
-|^
-?.  ?=(%noun mark)  `this
-  ?:  ?=(%reset q.vase)      :_  this  nuke-cards:hd  
+  |=  [=mark =vase]
+  |^
+  ?.  ?=(%noun mark)  `this
+  ?:  ?=(%reset q.vase)     :_  this  nuke-cards:hd  
   ?:  ?=(%sprint q.vase)    :_  this  dbug-cards:hd  
   :: ?:  ?=(%print q.vase)   ~&  >>  state  `this  
   ?:  ?=(%print q.vase)   
-  =/  his  (flop history)
-  ?~  his  ~&  >>>  "no blocks found"  `this
-  ~&  >>  last-block=q.p.i.his 
-  `this  
+    =/  his  (flop history)
+    ?~  his  ~&  >>>  "no blocks found"  [~ this]
+    ~&  >>  last-block=q.p.i.his
+    [~ this]
   ?:  ?=(%nuke q.vase)   
-    ~&  "nucking state"
+    ~&  "nuking state"
     =.  state  *state-0
     :_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd] 
-    
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
-  ?~  uaction  `this
+  ?~  uaction  [~ this]
   =/  action  u.uaction
   :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
-  %start
-    ?.  =(*signed-block block)  ~&  block-on-state-not-bunt=q.block  `this
+      %start
+    ?.  =(*signed-block block)  ~&  block-on-state-not-bunt=q.block  [~ this]
     ~&  "bootstrapping"
     =/  init-block=^block   [eny.bowl ts.action height]
     ~&  >  signing-block=init-block
     =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    =/  new-block  [signature init-block]
+    =/  new-block=signed-block  [signature init-block]
     =.  state
     %=  state
       block   new-block
       qc     [[new-block height round %1] ~]
       start-time  ts.action
     ==
-    ?~  robin  `this
-    ?.  .=(src.bowl i.robin)  `this
-    :_  this  
+    ?~  robin  [~ this]
+    ?.  .=(src.bowl i.robin)  [~ this]
+    :_  this
     :-  timer-card:hd
-        (bootstrap-cards:hd ts.action)
-      
+      (bootstrap-cards:hd ts.action)
   ::
   %broadcast  (handle-broadcast +.action)
   %vote       (handle-vote +.action)
