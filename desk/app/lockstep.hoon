@@ -65,6 +65,7 @@ $:  %0
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  [~ this]
   =/  action  u.uaction
+  ~&  on-poke=[-.action src.bowl]
   :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
       %start
@@ -83,7 +84,8 @@ $:  %0
     ?~  robin  [~ this]
     ?.  .=(src.bowl i.robin)  [~ this]
     :_  this
-    :-  timer-card:hd
+    =/  ts  find-time:hd
+    :-  (timer-card:hd ts)
       (bootstrap-cards:hd ts.action)
   ::
   %broadcast  (handle-broadcast +.action)
@@ -142,14 +144,15 @@ $:  %0
 |^
   ?:  ?=(%jael -.sign-arvo)  (update-keys +.sign-arvo)
   ?.  ?=(%behn -.sign-arvo)  `this
-    ~&  >  timer-pinged=[pole step]
+  =/  next-timer  find-time:hd
+  ~&  >  timer-pinged=[wire=pole step=step]
   ?+  pole  `this
     [%step ~]  
       ?-  step
         %1  
-          ?~  robin  bail
+          ?~  robin  (bail next-timer)
           ~&  >>  leader=i.robin
-          ?.  .=(our.bowl i.robin)  bail
+          ?.  .=(our.bowl i.robin)  (bail next-timer)
           =/  most-recent  find-most-recent:hd
           ~&  most-recent=most-recent
           =.  state  ?~  most-recent  state
@@ -157,18 +160,18 @@ $:  %0
               block  block.u.most-recent
               qc     u.most-recent
             ==
-            :_  increment-step  %-  broadcast-cards:hd
+            :_  increment-step  %-  broadcast-cards:hd  :_  next-timer
             =/  =vote  [block.state height round %1]
             ~&  >  leader-vote=[height=height round=round]
             [vote ~]
         ::
         %2  =/  lbl  latest-by-leader:hd
             ::  this logic is faulty
-            ?~  lbl  ~&  "no recent vote from leader found"  bail       
+            ?~  lbl  ~&  "no recent vote from leader found"  (bail next-timer)       
             =/  we-behind  (as-recent-qc:hd u.lbl qc)
             ~&  >>>  we-behind=we-behind
             ::  fix this shit
-            ?.  we-behind  bail
+            ?.  we-behind  (bail next-timer)
             =.  state
             %=  state
               block  block.u.lbl     
@@ -177,10 +180,10 @@ $:  %0
             :_  increment-step  
             =/  =vote  [block.u.lbl height round %1]
             ~&  >>  voting=[height round %1]
-            (broadcast-and-vote:hd u.lbl vote)
+            (broadcast-and-vote:hd u.lbl vote next-timer)
                      
         %3  =/  valid  (valid-qcs:hd %1) 
-            ?~  valid  ~&  "no valid qcs at stage 1"  bail
+            ?~  valid  ~&  "no valid qcs at stage 1"  (bail next-timer)
             =.  state
             %=  state
               block  block.i.valid
@@ -189,10 +192,10 @@ $:  %0
             :_  increment-step
             =/  vote  [block.i.valid height round %2]
             ~&  >>  voting=[height round %2]
-            (broadcast-and-vote:hd i.valid vote)
+            (broadcast-and-vote:hd i.valid vote next-timer)
             
         %4  =/  valid  (valid-qcs:hd %2)         
-            ?~  valid  ~&  "no valid qcs at stage 2"  addendum
+            ?~  valid  ~&  "no valid qcs at stage 2"  (addendum next-timer)
             =/  init-block  [eny.bowl now.bowl +(height)]            
             =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
             =/  new-block  [signature init-block]
@@ -206,12 +209,12 @@ $:  %0
               qc     [[new-block +(height) +(round) %1] ~]
             ==
             :_  increment-step
-            :-  addendum-card:hd
-            (broadcast-cards:hd i.valid)
+            :-  (addendum-card:hd next-timer)
+            (broadcast-cards:hd i.valid next-timer)
       ==
         [%addendum ~]  
             =/  valid  future-blocks:hd
-            =|  new-cards=(list card)         
+            =|  new-cards=(list card)        
             |-
             ?~  valid  :_  increment-round  new-cards
             =/  init-block  [eny.bowl now.bowl +(height)]            
@@ -224,7 +227,7 @@ $:  %0
               height  +(height)
               block  new-block
               qc     [[new-block +(height) +(round) %1] ~]
-              new-cards  (weld new-cards (broadcast-cards:hd i.valid))
+              new-cards  (weld new-cards (broadcast-cards-only:hd i.valid))
               valid  t.valid
             ==
     ==
@@ -235,9 +238,10 @@ $:  %0
     step  %1
   ==
   ++  addendum
+  |=  ts=@da
   :_  this  
-  :~  addendum-card:hd
-      timer-card:hd
+  :~  (addendum-card:hd ts)
+      (timer-card:hd ts)
   ==
   ++  shuffle-robin
   ?~  robin  robin
@@ -246,7 +250,8 @@ $:  %0
   =/  new-step  ?-(step %1 %2, %2 %3, %3 %4, %4 %1)
   this(step new-step)
   ++  bail
-  :_  increment-step  :~(timer-card:hd)
+  |=  ts=@da
+  :_  increment-step  :~((timer-card:hd ts))
   ::  %jael
   ++  update-keys
   |=  g=gift:jael
@@ -343,11 +348,11 @@ $:  %0
 |=  =^qc  ^-  ?
 %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
 ++  find-time  ^-  @da
+~&  >>  computing-next-timer=[start-time delta=delta round=round step=step]
 %+  add  start-time
 %+  mul  delta
 %+  add  
-%+  mul  4  round
-(dec step)
+%+  mul  4  round  step
 ::  cards
 ++  watch-cards  ^-  (list card)
 :~  [%pass /private-keys %arvo %j %private-keys ~]
@@ -355,17 +360,21 @@ $:  %0
     [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
 ==
 ++  broadcast-and-vote
-|=  [p=^qc =vote]
+|=  [p=^qc =vote ts=@da]
 =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
-:-  timer-card
+:-  (timer-card ts)
 %+  roll  nodes  |=  [i=@p acc=(list card)]
 %+  weld  acc
 :~  (broadcast-card p i)
     (vote-card signature vote i)
 ==
-++  broadcast-cards
+++  broadcast-cards-only
 |=  p=^qc  ^-  (list card)
-  :-  timer-card
+  %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
+
+++  broadcast-cards
+|=  [p=^qc ts=@da]  ^-  (list card)
+  :-  (timer-card ts)
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
 
 ++  broadcast-card
@@ -374,15 +383,20 @@ $:  %0
 ++  vote-card
 |=  [s=signature =vote sip=@p]
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote [s vote]])]]
-++  addendum-card  ^-  card
-=/  ts  (sub find-time (div ~s1 100))
-[%pass /addendum %arvo %b %wait ts]
+++  addendum-card
+|=  ts=@da
+=/  dts=@da  (sub ts (div ~s1 100))
+~&  addendum-card=dts
+~&  current-time=`@da`now.bowl
+[%pass /addendum %arvo %b %wait dts]
 ::
 ::
 ++  timer-card  
-~&  timer-card=find-time
+|=  ts=@da
+~&  timer-card=ts
+~&  current-time=`@da`now.bowl
 ^-  card
-[%pass /step %arvo %b %wait find-time]
+[%pass /step %arvo %b %wait ts]
 ++  bootstrap-cards
 |=  ts=@da
 %+  turn  nodes  |=  sip=@p
