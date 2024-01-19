@@ -42,13 +42,14 @@ $:  %0
 ++  on-load   |=  old-state=vase 
 :: =/  prev  !<(state-0 old-state)
 :: `this(state prev)
-`this(robin nodes)
+:_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd]
 ::
 ++  on-watch  |=(=(pole knot) `this)
 ++  on-poke   
 |=  [=mark =vase]
 |^
 ?.  ?=(%noun mark)  `this
+  ?:  ?=(%keys q.vase)  ~&  `signature`[(sign:as:keys 1) our.bowl our-life]  `this
   ?:  ?=(%reset q.vase)      :_  this  nuke-cards:hd  
   ?:  ?=(%sprint q.vase)    :_  this  dbug-cards:hd  
   :: ?:  ?=(%print q.vase)   ~&  >>  state  `this  
@@ -65,39 +66,42 @@ $:  %0
   =/  uaction  ((soft action) q.vase)  :: TODO crash alert
   ?~  uaction  `this
   =/  action  u.uaction
-  :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
-  %start
-    ?.  =(*signed-block block)  ~&  block-on-state-not-bunt=q.block  `this
-    ~&  "bootstrapping"
-    =/  init-block=^block   [eny.bowl ts.action height]
-    ~&  >  signing-block=init-block
-    =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    =/  new-block  [signature init-block]
-    =.  state
-    %=  state
-      block   new-block
-      qc     [[new-block height round %1] ~]
-      start-time  ts.action
-    ==
-    ?~  robin  `this
-    ?.  .=(src.bowl i.robin)  `this
-    :_  this  
-    :-  timer-card:hd
-        (bootstrap-cards:hd ts.action)
-      
-  ::
+  %start      (handle-start +.action)
   %broadcast  (handle-broadcast +.action)
   %vote       (handle-vote +.action)
   ==
+  ++  handle-start
+  |=  ts=@da
+  ~&  handling-start=ts
+  ?.  =(*signed-block block)  `this
+  ~&  "bootstrapping"
+  =/  init-block=^block   [eny.bowl ts height ~]
+  =/  s=signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
+  =/  new-block  [s init-block]
+  ~&  >  signing-block=eny.bowl
+  =.  state
+  %=  state
+    block   new-block
+    qc     [[new-block height round %1] ~]
+    start-time  ts
+  ==
+  ?~  robin  `this
+  ?.  .=(src.bowl i.robin)  `this
+  :_  this  
+  :-  timer-card:hd
+      (bootstrap-cards:hd ts)
+    
   ++  handle-broadcast
   |=  =^qc  ^-  (quip card _this)
   ~&  handling-broadcast=[src.bowl height.qc round.qc]
-  ?:  (lth height.qc height)  `this
+  ::  After committing a block we broadcast its qc, but by definition when getting here the height has incremented so the qc isn't committed to store. Why are we broadcasting it then?
+  ?:  (lth height.qc height)  ~&  "broadcast height below current"  `this
   :-  ~  
   =/  old-quorum  (~(get by vote-store) -.qc)
   
   =/  nq  ?~  old-quorum  +.qc  (~(uni in u.old-quorum) +.qc)
+  ~&  "commiting broadcast to store"
   %=  this
     vote-store  (~(put by vote-store) -.qc nq)
   ==
@@ -140,12 +144,15 @@ $:  %0
 ==
 ++  on-arvo   
 |=  [=(pole knot) =sign-arvo]  
+~&  >>>  timer-pinged-at=[pole height=height round=round step=step]
+=/  next-timer  (find-time +(step))
 |^
   ?:  ?=(%jael -.sign-arvo)  (update-keys +.sign-arvo)
   ?.  ?=(%behn -.sign-arvo)  `this
-    ~&  >  timer-pinged=[pole step]
   ?+  pole  `this
     [%step ~]  
+        ~&  >  current-time=[m s f]:(yell now.bowl)
+        ~&  >>  nexttimer-at=[m s f]:(yell next-timer)
       ?-  step
         %1  
           ?~  robin  bail
@@ -158,9 +165,9 @@ $:  %0
               block  block.u.most-recent
               qc     u.most-recent
             ==
-            :_  increment-step  %-  broadcast-cards:hd
-            =/  =vote  [block.state height round %1]
-            ~&  >  leader-vote=[height=height round=round]
+            :_  increment-step  :-  timer-card  %-  broadcast-cards:hd
+            =/  =vote  [block height round %1]
+            ~&  >  leader-vote=[block height=height round=round]
             [vote ~]
         ::
         %2  =/  lbl  latest-by-leader:hd
@@ -175,7 +182,7 @@ $:  %0
               block  block.u.lbl     
               qc     u.lbl
             ==
-            :_  increment-step  
+            :_  increment-step  :-  timer-card  
             =/  =vote  [block.u.lbl height round %1]
             ~&  >>  voting=[height round %1]
             (broadcast-and-vote:hd u.lbl vote)
@@ -187,14 +194,14 @@ $:  %0
               block  block.i.valid
               qc     i.valid
             ==
-            :_  increment-step
+            :_  increment-step  :-  timer-card
             =/  vote  [block.i.valid height round %2]
             ~&  >>  voting=[height round %2]
             (broadcast-and-vote:hd i.valid vote)
             
         %4  =/  valid  (valid-qcs:hd %2)         
             ?~  valid  ~&  "no valid qcs at stage 2"  addendum
-            =/  init-block  [eny.bowl now.bowl +(height)]            
+            =/  init-block  [eny.bowl now.bowl +(height) ~]            
             =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
             =/  new-block  [signature init-block]
             =.  state
@@ -207,7 +214,8 @@ $:  %0
               qc     [[new-block +(height) +(round) %1] ~]
             ==
             :_  increment-step
-            :-  addendum-card:hd
+            :-  addendum-card
+            :-  timer-card
             (broadcast-cards:hd i.valid)
       ==
         [%addendum ~]  
@@ -215,7 +223,7 @@ $:  %0
             =|  new-cards=(list card)         
             |-
             ?~  valid  :_  increment-round  new-cards
-            =/  init-block  [eny.bowl now.bowl +(height)]            
+            =/  init-block  [eny.bowl now.bowl +(height) ~]            
             =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
             =/  new-block  [signature init-block]
             %=  $
@@ -237,8 +245,8 @@ $:  %0
   ==
   ++  addendum
   :_  this  
-  :~  addendum-card:hd
-      timer-card:hd
+  :~  addendum-card
+      timer-card
   ==
   ++  shuffle-robin
   ?~  robin  robin
@@ -247,20 +255,25 @@ $:  %0
   =/  new-step  ?-(step %1 %2, %2 %3, %3 %4, %4 %1)
   this(step new-step)
   ++  bail
-  :_  increment-step  :~(timer-card:hd)
+  :_  increment-step  :~(timer-card)
   ::  %jael
   ++  update-keys
   |=  g=gift:jael
-  ~&  updating-jael=g
+  ~&  updating-keys=g
   ?.  ?=(%private-keys -.g)  `this
   =/  vein  vein.g
   =/  private-key  (~(get by vein) life.g)
-  ?~  private-key  `this
+  ?~  private-key  ~&  >>>  "private key not found"  `this
   :-  ~
   %=  this
     our-life  life.g
     keys  (nol:nu:crub:crypto u.private-key)
   ==
+  ++  addendum-card  ^-  card
+  =/  ts  (sub next-timer (div ~s1 100))
+  [%pass /addendum %arvo %b %wait ts]
+  ++  timer-card  ^-  card
+  [%pass /step %arvo %b %wait next-timer]
   --
 --
 |_   =bowl:gall
@@ -301,7 +314,7 @@ $:  %0
 ?.  =(q.p.block.i leader)  acc
 :: validate signature
 =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
-?~  leader-keys  acc
+?~  leader-keys  ~&  "leader keys not found"  acc
 =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
 =/  s=signature  -.block.i
 =/  ver  (sure:as:crub p.s)
@@ -343,12 +356,13 @@ $:  %0
 ++  validate-qc
 |=  =^qc  ^-  ?
 %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
-++  find-time  ^-  @da
+
+++  find-time  |=  stp=@ud  ^-  @da
+~&  finding-time-for-step=stp
 %+  add  start-time
 %+  mul  delta
 %+  add  
-%+  mul  4  round
-(dec step)
+%+  mul  4  round  stp
 ::  cards
 ++  watch-cards  ^-  (list card)
 :~  [%pass /private-keys %arvo %j %private-keys ~]
@@ -358,7 +372,6 @@ $:  %0
 ++  broadcast-and-vote
 |=  [p=^qc =vote]
 =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
-:-  timer-card
 %+  roll  nodes  |=  [i=@p acc=(list card)]
 %+  weld  acc
 :~  (broadcast-card p i)
@@ -366,7 +379,6 @@ $:  %0
 ==
 ++  broadcast-cards
 |=  p=^qc  ^-  (list card)
-  :-  timer-card
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
 
 ++  broadcast-card
@@ -375,15 +387,11 @@ $:  %0
 ++  vote-card
 |=  [s=signature =vote sip=@p]
 [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote [s vote]])]]
-++  addendum-card  ^-  card
-=/  ts  (sub find-time (div ~s1 100))
-[%pass /addendum %arvo %b %wait ts]
 ::
 ::
 ++  timer-card  
-~&  timer-card=find-time
 ^-  card
-[%pass /step %arvo %b %wait find-time]
+[%pass /step %arvo %b %wait (find-time step)]
 ++  bootstrap-cards
 |=  ts=@da
 %+  turn  nodes  |=  sip=@p

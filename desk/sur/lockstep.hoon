@@ -8,7 +8,7 @@
   ==
 
 +$  history  (list (pair signed-block qc))
-+$  block    [noun=* ts=@da =height]  :: Mint should include a signature to be validated
++$  block    [noun=* ts=@da =height last-quorum=quorum]  :: Mint should include a signature to be validated
 +$  signed-block  (pair signature block)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
