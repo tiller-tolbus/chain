@@ -43,6 +43,8 @@ $:  %0
   |=  old-state=vase 
   :: =/  prev  !<(state-0 old-state)
   :: `this(state prev)
+  ::
+  ::  instead of upgrade logic we nuke state on update
   `this(robin nodes)
 ::
 ++  on-watch  |=(=(pole knot) `this)
@@ -67,10 +69,15 @@ $:  %0
   =/  action  u.uaction
   :: ~&  >  action=[src.bowl -.action]
   ?-  -.action
-      %start
+    %start      (handle-start +.action)
+    %broadcast  (handle-broadcast +.action)
+    %vote       (handle-vote +.action)
+  ==
+  ++  handle-start
+    |=  ts=@da
     ?.  =(*signed-block block)  ~&  block-on-state-not-bunt=q.block  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=^block   [eny.bowl ts.action height]
+    =/  init-block=^block   [eny.bowl ts height]
     ~&  >  signing-block=init-block
     =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
     =/  new-block=signed-block  [signature init-block]
@@ -78,28 +85,23 @@ $:  %0
     %=  state
       block   new-block
       qc     [[new-block height round %1] ~]
-      start-time  ts.action
+      start-time  ts
     ==
     ?~  robin  [~ this]
     ?.  .=(src.bowl i.robin)  [~ this]
     :_  this
     :-  timer-card:hd
-      (bootstrap-cards:hd ts.action)
-  ::
-  %broadcast  (handle-broadcast +.action)
-  %vote       (handle-vote +.action)
-  ==
+      (bootstrap-cards:hd ts)
   ++  handle-broadcast
-  |=  =^qc  ^-  (quip card _this)
-  ~&  handling-broadcast=[src.bowl height.qc round.qc]
-  ?:  (lth height.qc height)  `this
-  :-  ~  
-  =/  old-quorum  (~(get by vote-store) -.qc)
-  
-  =/  nq  ?~  old-quorum  +.qc  (~(uni in u.old-quorum) +.qc)
-  %=  this
-    vote-store  (~(put by vote-store) -.qc nq)
-  ==
+    |=  =^qc  ^-  (quip card _this)
+    ~&  handling-broadcast=[src.bowl height.qc round.qc]
+    ?:  (lth height.qc height)  `this
+    :-  ~  
+    =/  old-quorum  (~(get by vote-store) -.qc)
+    =/  nq  ?~  old-quorum  +.qc  (~(uni in u.old-quorum) +.qc)
+    %=  this
+      vote-store  (~(put by vote-store) -.qc nq)
+    ==
   ++  handle-vote
   |=  [s=signature =vote]
   ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
