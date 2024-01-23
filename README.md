@@ -34,8 +34,8 @@ There does not yet exist a BFT-SMR network on Urbit. Some attempts have been mad
 
 The opinion of the `%chain` developers is that BFT-SMR, normally considered an incredibly difficult problem domain, is well-suited to Urbit's application model. In particular, programmer overhead for messaging, broadcast, discovery, sybil resistance, cryptography, and much more is handled natively by Urbit OS. There is still an inherent perniciousness to the details of consensus algorithms, but the overhead is drastically reduced in any case. 
 
-We will begin by creating a reference implementation for two BFT consensus algorithms, `%lockstep` and `%frontier`, to investigate the suitability of two competing approaches to BFT-SMR within the context of an Urbit application. 
-  * `%lockstep` is inspired by the Tendermint protocol and aims to carefully keep a set of nodes in sync with each other as state transformations are voted on throughout a network, providing instant finality when a change is finally accepted. 
+We will begin by creating a reference implementation for two BFT consensus algorithms, `%clockwork` and `%frontier`, to investigate the suitability of two competing approaches to BFT-SMR within the context of an Urbit application. 
+  * `%clockwork` is inspired by the Tendermint protocol and aims to carefully keep a set of nodes in sync with each other as state transformations are voted on throughout a network, providing instant finality when a change is finally accepted. 
   * `%frontier` is inspired by the Avalanche protocol and allows nodes to keep a local state that is continuously updated by polling the network, with a guarantee to converge towards metastability at a dominant polling result. 
 
 Both protocols will assume that every validator is either a star or a galaxy. To begin, the assumption may also be made that only planets, stars, and galaxies can participate and create transactions -- this will delay the need to implement fee/reward mechanisms too early. 
