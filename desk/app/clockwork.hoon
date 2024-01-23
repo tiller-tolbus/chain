@@ -1,4 +1,4 @@
-/-  *lockstep, pki=pki-store
+/-  *clockwork, pki=pki-store
 /+  dbug, mip
 |%
 +$  versioned-state
@@ -32,7 +32,7 @@ $:  %0
 +*  this      .
     hd  ~(. +> bowl)
 ::
-++  on-init  
+++  on-init
 ~&  " "
 ~&  >  "%chain initialized"
 :_  this(robin nodes)  watch-cards:hd
@@ -121,7 +121,7 @@ $:  %0
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-agent  
   |=  [=(pole knot) =sign:agent:gall]
-  :: ~>  %bout.[0 '%lockstep +on-agent']
+  :: ~>  %bout.[0 '%clockwork +on-agent']
   ?+  pole  [~ this]
       [%pki-store ~]
     ?+  -.sign  [~ this]
@@ -151,7 +151,7 @@ $:  %0
     ~&  >  current-time=[m s f]:(yell now.bowl)
     ~&  >>  nexttimer-at=[m s f]:(yell next-timer)
     ?-  step
-        %1  
+        %1
       ?~  robin  bail
       ~&  >>  leader=i.robin
       ?.  .=(our.bowl i.robin)  bail
@@ -374,23 +374,23 @@ $:  %0
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
 ++  broadcast-card
   |=  [p=^qc sip=ship]  ^-  card
-  [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%broadcast p])]]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
 ++  vote-card
   |=  [s=signature =vote sip=@p]
-  [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%vote [s vote]])]]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%vote [s vote]])]]
 ::
 ++  timer-card  ^-  card
   [%pass /step %arvo %b %wait (find-time step)]
 ++  bootstrap-cards
   |=  ts=@da
   %+  turn  nodes  |=  sip=@p
-  [%pass /wire %agent [sip %lockstep] %poke [%noun !>([%start ts])]]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%start ts])]]
 ++  dbug-cards
   %+  turn  nodes  |=  sip=@p
-  [%pass /wire %agent [sip %lockstep] %poke [%noun !>(%print)]]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%print)]]
 ++  fake-pki-card
   [%pass /wire %agent [our.bowl %pki-store] %poke [%noun !>(%set-fake)]]
 ++  nuke-cards
   %+  turn  nodes  |=  sip=@p
-  [%pass /wire %agent [sip %lockstep] %poke [%noun !>(%nuke)]]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 --
