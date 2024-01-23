@@ -8,7 +8,7 @@
   ==
 
 +$  history  (list (pair signed-block qc))
-+$  block    [noun=* ts=@da =height]  :: Mint should include a signature to be validated
++$  block    [noun=* ts=@da =height last-quorum=quorum]  :: Mint should include a signature to be validated
 +$  signed-block  (pair signature block)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
@@ -23,7 +23,7 @@
 ::   ==
 +$  step  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
-++  delta  ~s5  :: time between steps
+++  delta  ~s3  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  block=signed-block
