@@ -37,3 +37,8 @@ scry maximalist route:
 .^((list path) %gt /=token=//token/txn)
 
 ```
+
+New:
+* Create %clockstep
+* Rip out arms into lib
+* Write tests
