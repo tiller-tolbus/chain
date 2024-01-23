@@ -4,12 +4,17 @@
 +$  action
   $%  [%start ts=@da]
       [%broadcast =qc]
-      [%vote s=signature vote]  :: eventually we get gossip votes so this should be annotated with voter+signature
+      [%vote s=signature vote]
   ==
-
-+$  history  (list (pair signed-block qc))
-+$  block    [noun=* ts=@da =height last-quorum=quorum]  :: Mint should include a signature to be validated
-+$  signed-block  (pair signature block)
++$  history  (list block)
++$  block
+  $:  mint=node
+      noun=*
+      ts=@da
+      =height
+      last=quorum
+  == 
+:: +$  signed-block  (pair signature block)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
 +$  height  @ud
@@ -26,7 +31,7 @@
 ++  delta  ~s3  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
-  $:  block=signed-block
+  $:  =block
       referendum
   ==
 :: +$  raw-signed-vote  @

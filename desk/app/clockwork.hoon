@@ -8,7 +8,7 @@ $%  state-0
 $:  %0
     robin=(list node)  :: node order, round-robin
     =height
-    block=signed-block
+    =block
     :: qc-store=(set (pair node qc))  :: pair of ship sending the qc and qc  
     =vote-store
     =qc   ::  quorum certificate
@@ -58,7 +58,7 @@ $:  %0
     ?:  ?=(%print q.vase)
       =/  his  (flop history)
     ?~  his  ~&  >>>  "no blocks found"  [~ this]
-      ~&  >>  last-block=q.p.i.his  [~ this]
+      ~&  >>  last-block=i.his  [~ this]
     ?:  ?=(%nuke q.vase)   
       ~&  "nuking state"
       =.  state  *state-0
@@ -74,16 +74,16 @@ $:  %0
   ++  handle-start
     |=  ts=@da
     ~&  handling-start=ts
-    ?.  =(*signed-block block)  [~ this]
+    ?.  =(*^block block)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=^block   [eny.bowl ts height ~]
-    =/  s=signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    =/  new-block  [s init-block]
-    ~&  >  signing-block=eny.bowl
+    =/  init-block=^block   [our.bowl eny.bowl ts height ~]
+    :: =/  s=signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
+    :: =/  new-block  [s init-block]
+    :: ~&  >  signing-block=eny.bowl
     =.  state
     %=  state
-      block   new-block
-      qc     [[new-block height round %1] ~]
+      block   init-block
+      qc     [[init-block height round %1] ~]
       start-time  ts
     ==
     ?~  robin  [~ this]
@@ -202,17 +202,17 @@ $:  %0
         %4  
       =/  valid  (valid-qcs:hd %2)         
       ?~  valid  ~&  "no valid qcs at stage 2"  addendum
-      =/  init-block  [eny.bowl now.bowl +(height) ~]            
-      =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-      =/  new-block  [signature init-block]
+      =/  init-block  [our.bowl eny.bowl now.bowl +(height) ~]
+      :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
+      :: =/  new-block  [signature init-block]
       =.  state
       %=  state
         history  
-          ~&  >>  block-commited=[h=height r=round who=q.p.block.i.valid noun=(@uw noun.q.block.i.valid)]
-          (snoc history [p=block.i.valid q=i.valid])  
+          ~&  >>  block-commited=[h=height r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+          (snoc history block.i.valid)  
         height  +(height)
-        block  new-block
-        qc     [[new-block +(height) +(round) %1] ~]
+        block  init-block
+        qc     [[init-block +(height) +(round) %1] ~]
       ==
       :_  increment-step
       :-  addendum-card
@@ -224,16 +224,16 @@ $:  %0
     =|  new-cards=(list card)         
     |-
     ?~  valid  :_  increment-round  new-cards
-    =/  init-block  [eny.bowl now.bowl +(height) ~]            
-    =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    =/  new-block  [signature init-block]
+    =/  init-block  [our.bowl eny.bowl now.bowl +(height) ~]            
+    :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
+    :: =/  new-block  [signature init-block]
     %=  $
       history  
-        ~&  >>  block-commited=[h=height r=round who=q.p.block.i.valid noun=(@uw noun.q.block.i.valid)]
-        (snoc history [block.i.valid i.valid])  
+        ~&  >>  block-commited=[h=height r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+        (snoc history block.i.valid)  
       height  +(height)
-      block  new-block
-      qc     [[new-block +(height) +(round) %1] ~]
+      block  init-block
+      qc     [[init-block +(height) +(round) %1] ~]
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
@@ -308,15 +308,14 @@ $:  %0
   ~&  leader=[leader our.bowl height round]
   %+  roll  ~(tap by vote-store)
   |=  [i=^qc acc=(unit ^qc)]
-  ?.  =(q.p.block.i leader)  acc
+  ?.  =(mint.block.i leader)  acc
   :: validate signature
-  =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
-  ?~  leader-keys  ~&  "leader keys not found"  acc
-  =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
-  =/  s=signature  -.block.i
-  =/  ver  (sure:as:crub p.s)
-  ?~  ver  ~&  "leader signature on block untrue"  acc
-  ::
+  :: =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
+  :: ?~  leader-keys  ~&  "leader keys not found"  acc
+  :: =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
+  :: =/  s=signature  -.block.i
+  :: =/  ver  (sure:as:crub p.s)
+  :: ?~  ver  ~&  "leader signature on block untrue"  acc
   ?.  =(height height.i)  acc
   ?~  acc  (some i)
   ?:  (more-recent-qc i u.acc)  (some i)  acc
@@ -334,6 +333,7 @@ $:  %0
   ?&  =(round.a round.b)
        (gte stage.a stage.b)
   ==
+  ::
 ++  more-recent-qc
   |=  [a=^qc b=^qc]  ^-  ?
   ?:  (gth round.a round.b)  .y
