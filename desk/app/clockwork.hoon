@@ -171,10 +171,12 @@ $:  %0
       =/  lbl  latest-by-leader:hd
       ::  this logic is faulty
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
-      =/  we-behind  (as-recent-qc:hd u.lbl qc)
-      ~&  >>>  we-behind=we-behind
+      =/  received-new  (as-recent-qc:hd u.lbl qc)
+      ~&  >>>  received-new=received-new
+      ~&  [my-height=height lbl-height=height.u.lbl]
+      ~&  [my-round=round lbl-round=round.u.lbl]
       ::  fix this shit
-      ?.  we-behind  bail
+      ?.  received-new  bail
       =.  state
       %=  state
         block  block.u.lbl     
@@ -274,7 +276,7 @@ $:  %0
     [%pass /step %arvo %b %wait next-timer]
   --
 --
-|_   =bowl:gall
+|_  =bowl:gall
 ++  future-blocks  ^-  (list ^qc)
   %+  sort
   %+  skim  ~(tap by vote-store)
@@ -328,7 +330,7 @@ $:  %0
   ::
 ++  as-recent-qc
   |=  [a=^qc b=^qc]  ^-  ?
-  ?:  (lth round.a round.b)  .n
+  ?:  (gte round.a round.b)  .y
   ?&  =(round.a round.b)
        (gte stage.a stage.b)
   ==
