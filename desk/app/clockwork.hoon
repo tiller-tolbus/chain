@@ -158,7 +158,7 @@ $:  %0
       ?~  robin  bail
       ~&  >>  leader=i.robin
       ?.  .=(our.bowl i.robin)  bail
-      =/  most-recent  find-most-recent:hd
+      =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
       =.  state  ?~  most-recent  state
       %=  state
@@ -179,7 +179,7 @@ $:  %0
       ?.  (gte height.u.lbl height.local)  bail
       =/  received-new=?
         ?~  qc.local  %.y
-        (as-recent:qcs:lib u.lbl u.qc.local)
+        (as-recent:qcu:lib u.lbl u.qc.local)
       ~&  >  received-new=received-new
       :: ~&  [my-height=height lbl-height=height.u.lbl]
       :: ~&  [my-round=round lbl-round=round.u.lbl]
@@ -195,7 +195,7 @@ $:  %0
       (broadcast-and-vote:hd u.lbl vote)
         ::
         %3  
-      =/  valid  (valid-qcs:hd %1) 
+      =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %1) 
       ?~  valid  ~&  "no valid qcs at stage 1"  bail
       =.  state
       %=  state
@@ -207,7 +207,7 @@ $:  %0
       ~&  >>  voting=[height.local round.local %2]
       (broadcast-and-vote:hd i.valid vote)
         %4  
-      =/  valid  (valid-qcs:hd %2)         
+      =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %2)         
       ?~  valid  ~&  "no valid qcs at stage 2"  addendum
       =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]
       :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
@@ -284,33 +284,7 @@ $:  %0
   --
 --
 |_  =bowl:gall
-++  valid-qcs  
-  |=  stage=?(%1 %2)
-  ^-  (list qc)  ::  there should only be one but w/e
-  ~&  checking-qcs=[stage round.local height.local]
-  %+  skim  ~(tap by vote-store)
-  |=  i=qc  ^-  ?
-  :: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
-  ?&  %+  gte  ~(wyt in +.i)  (sm:lib (lent nodes))
-      .=(height.local height.i)
-      .=(round.local round.i)
-      .=(stage stage.i)
-  ==
-++  majority-qcs
-  %+  skim  ~(tap by vote-store)
-  |=  i=qc  ^-  ?
-  %+  gte  ~(wyt in +.i)  (sm:lib (lent nodes))
-++  find-most-recent  ^-  (unit qc)
-  %+  roll  ~(tap by vote-store) 
-  |=  [i=qc acc=(unit qc)]
-  ?.  (validate-qc i)  acc
-  ?.  =(height.local height.i)  acc
-  ?~  acc  (some i)
-  ?:  (more-recent:qcs:lib i u.acc)  (some i)  acc
   ::
-++  validate-qc
-  |=  =qc  ^-  ?
-  %+  gte  ~(wyt in +.qc)  (sm:lib (lent nodes))
 ++  find-time  |=  stp=@ud  ^-  @da
   ~&  finding-time-for-step=stp
   %+  add  start-time
