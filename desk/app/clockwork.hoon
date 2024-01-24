@@ -62,7 +62,6 @@ $:  %0
       [~ this]
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
     ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
-    :: ?:  ?=(%print q.vase)   ~&  >>  state  [~ this]
     ?:  ?=(%print q.vase)
       =/  his  (flop history)
       ?~  his  ~&  >>>  "no blocks found"  [~ this]
@@ -80,7 +79,6 @@ $:  %0
     ?-  -.action
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
-      :: %vote       (handle-vote +.action)
     ==
   ++  handle-start
     |=  ts=@da
@@ -88,18 +86,9 @@ $:  %0
     ?.  =(*block block.local)  [~ this]
     ~&  "bootstrapping"
     =/  init-block=block   [our.bowl eny.bowl ts height.local ~]
-    :: =/  s=signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    :: =/  new-block  [s init-block]
-    :: ~&  >  signing-block=eny.bowl
-    =.  state
-      %=  state
-        block.local   init-block
-        qc.local  ~
-        start-time  ts
-      ==
-    :: =.  block.local  init-block
-    :: =.  qc.local  ~
-    :: =.  start-time  ts
+    =.  block.local  init-block
+    =.  qc.local  ~
+    =.  start-time  ts
     ?~  robin  [~ this]
     ?.  .=(src.bowl i.robin)  [~ this]
     :_  this  
@@ -177,7 +166,6 @@ $:  %0
         %2  
       ?~  robin  bail
       =/  leader=node  i.robin
-      :: =/  init-vs  ~(. vs vote-store)
       =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
       ?.  =(height.u.lbl height.local)  
@@ -187,8 +175,6 @@ $:  %0
         ?~  qc.local  %.y
         (as-recent:qcu:lib u.lbl u.qc.local)
       ~&  >  received-new=received-new
-      :: ~&  [my-height=height lbl-height=height.u.lbl]
-      :: ~&  [my-round=round lbl-round=round.u.lbl]
       ?.  received-new
         ~&  "did not receive new block from leader"
         bail
@@ -218,8 +204,6 @@ $:  %0
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %2)         
       ?~  valid  ~&  "no valid qcs at stage 2"  addendum
       =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]
-      :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-      :: =/  new-block  [signature init-block]
       =.  state
       %=  state
         history  
@@ -240,8 +224,6 @@ $:  %0
     |-
     ?~  valid  :_  increment-round  new-cards
     =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]            
-    :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
-    :: =/  new-block  [signature init-block]
     %=  $
       history  
         ~&  >>  block-commited=[h=height.local r=round.local who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
