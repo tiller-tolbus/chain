@@ -1,5 +1,6 @@
 /-  *clockwork, pki=pki-store
 /+  lib=clockwork, dbug, mip
+=,  crypto
 |%
 +$  versioned-state
 $%  state-0
@@ -7,7 +8,7 @@ $%  state-0
 +$  state-0
 $:  %0
     robin=(list node)  :: node order, round-robin
-    $=  local           :: local variables from spec
+    $=  local          :: local variables from spec
       $:
         =height
         =block
@@ -51,21 +52,21 @@ $:  %0
   |=  [=mark =vase]
   |^
   ?.  ?=(%noun mark)  [~ this]
-    ?:  ?=(%keys q.vase)  ~&
-      `signature`[(sign:as:keys 1) our.bowl our-life]
+    ?:  ?=(%keys q.vase)  
+      ~&  `signature`[(sigh:as:keys 1) our.bowl our-life]
       [~ this]
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd  
     ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd  
     :: ?:  ?=(%print q.vase)   ~&  >>  state  [~ this]
     ?:  ?=(%print q.vase)
       =/  his  (flop history)
-    ?~  his  ~&  >>>  "no blocks found"  [~ this]
+      ?~  his  ~&  >>>  "no blocks found"  [~ this]
       ~&  >>  last-block=i.his  [~ this]
     ?:  ?=(%nuke q.vase)   
       ~&  "nuking state"
       =.  state  *state-0
       :_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd] 
-    =/  uaction  ((soft action) q.vase)  :: TODO crash alert
+    =/  uaction  ((soft action) q.vase)
     ?~  uaction  [~ this]
     =/  action  u.uaction
     ?-  -.action
@@ -95,7 +96,7 @@ $:  %0
         (bootstrap-cards:hd ts)
   ++  handle-broadcast
     |=  =qc  ^-  (quip card _this)
-    ~&  handling-broadcast=[src.bowl height.qc round.qc]
+    ~&  handling-broadcast=[src.bowl height.qc round.qc stage.qc]
     ?:  (lth height.qc height.local)  ~&  "broadcast height below current"  [~ this]
     :-  ~  
     =/  old-quorum  (~(get by vote-store) -.qc)
@@ -106,18 +107,20 @@ $:  %0
     ==
   ++  handle-vote
     |=  [s=signature =vote]
+    ^-  (quip card _this)
     ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
     ?.  =(height.vote height.local)  [~ this]
-    =/  voter-keys  (~(get bi:mip pki-store) q.s r.s)
-    ?~  voter-keys  ~&  "no keys found"  [~ this]
-    =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
-    =/  ver  (sure:as:crub p.s)
-    ?~  ver  ~&  "leader signature on block untrue"  [~ this]
+    =/  pass  (~(get bi:mip pki-store) q.s r.s)
+    ?~  pass  ~&  "no keys found"  [~ this]
+    =/  msg  (jam block.vote)
+    =/  keys  (com:nu:crub u.pass)
+    ?.  (safe:as:keys p.s msg)  
+      ~&  "vote signature invalid"  [~ this]
     :-  ~
-    =/  old-quorum  (~(get by vote-store) vote)
-    =/  nq  ?~  old-quorum  (silt ~[s])  (~(put in u.old-quorum) s)
+    :: =/  old-quorum  (~(get by vote-store) vote)
+    :: =/  nq  ?~  old-quorum  (silt ~[s])  (~(put in u.old-quorum) s)
     %=  this
-      vote-store  (~(put by vote-store) vote nq)
+      vote-store  (~(put ju vote-store) vote s)
     ==
   --
 ++  on-peek   |=(=(pole knot) ~)  
@@ -176,14 +179,18 @@ $:  %0
       :: =/  init-vs  ~(. vs vote-store)
       =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
-      ?.  (gte height.u.lbl height.local)  bail
+      ?.  =(height.u.lbl height.local)  
+        ~&  "received block at incorrect height"
+        bail
       =/  received-new=?
         ?~  qc.local  %.y
         (as-recent:qcu:lib u.lbl u.qc.local)
       ~&  >  received-new=received-new
       :: ~&  [my-height=height lbl-height=height.u.lbl]
       :: ~&  [my-round=round lbl-round=round.u.lbl]
-      ?.  received-new  bail
+      ?.  received-new
+        ~&  "did not receive new block from leader"
+        bail
       =.  state
       %=  state
         block.local  block.u.lbl     
@@ -261,8 +268,12 @@ $:  %0
     (snoc t.robin i.robin)
   ++  increment-step
     =/  new-step  ?-(step.local %1 %2, %2 %3, %3 %4, %4 %1)
+    ~&  ["increment step" new-step=new-step]
     this(step.local new-step)
-  ++  bail  :_  increment-step  :~(timer-card)
+  ++  bail  
+    :_  increment-step
+    ~&  ["bail on step" step.local]
+    :~(timer-card)
   ::  %jael
   ++  update-keys
     |=  g=gift:jael
@@ -274,7 +285,7 @@ $:  %0
     :-  ~
     %=  this
       our-life  life.g
-      keys  (nol:nu:crub:crypto u.private-key)
+      keys      (nol:nu:crub u.private-key)
     ==
   ++  addendum-card  ^-  card
     =/  ts  (sub next-timer (div ~s1 100))
@@ -302,7 +313,7 @@ $:  %0
 ++  broadcast-and-vote
   |=  [p=qc =vote]
   ^-  (list card)
-  =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
+  =/  =signature  [(sigh:as:keys (jam vote)) our.bowl our-life]
   %+  roll  nodes  |=  [i=@p acc=(list card)]
   %+  weld  acc
   :~  (broadcast-card p i)

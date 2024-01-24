@@ -36,10 +36,10 @@
   ==
 :: +$  raw-signed-vote  @
 :: +$  signed-vote  [signature=@ =node =vote]  ::  signatures are a jam of [signed-msg msg] so we can cue the vote out of it
-+$  signed-vote  signature
-+$  quorum  (set signed-vote)
+:: +$  signed-vote  signature
++$  quorum  (set signature)
 +$  qc  [vote quorum]  :: provisional qc, no guarantees of majority
-+$  vote-store  (map vote quorum)
++$  vote-store  (jug vote signature)
 ::  constants
 ++  nodes  ^-  (list node)
 :~  ~zod
