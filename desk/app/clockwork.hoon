@@ -1,5 +1,8 @@
 /-  *clockwork, pki=pki-store
-/+  lib=clockwork, dbug, mip
+/+  lib=clockwork,
+    dbug,
+    default-agent,
+    mip
 =,  crypto
 |%
 +$  versioned-state
@@ -34,45 +37,50 @@ $:  %0
 |_  =bowl:gall
 +*  this      .
     hd  ~(. +> bowl)
+    default  ~(. (default-agent this %|) bowl)
 ::
 ++  on-init
-~&  " "
-~&  >  "%chain initialized"
-:_  this(robin nodes)  watch-cards:hd
+  ~&  >  "%chain initialized"
+  :-  watch-cards:hd
+  this(robin nodes)
 ++  on-leave  |~(* [~ this])
-++  on-fail   |~(* [~ this])
+++  on-fail   on-fail:default
 ++  on-save   !>(state)
-++  on-load   |=  old-state=vase 
-:: =/  prev  !<(state-0 old-state)
-:: [~ this](state prev)
-:_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd]
+++  on-load 
+  |=  old-state=vase 
+  :-  [fake-pki-card:hd watch-cards:hd]
+  this(robin nodes)
 ::
 ++  on-watch  |=(=(pole knot) [~ this])
-++  on-poke   
+++  on-poke
   |=  [=mark =vase]
   |^
+  :: check various conditions for testing
   ?.  ?=(%noun mark)  [~ this]
     ?:  ?=(%keys q.vase)  
       ~&  `signature`[(sigh:as:keys 1) our.bowl our-life]
       [~ this]
-    ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd  
-    ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd  
+    ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
+    ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
     :: ?:  ?=(%print q.vase)   ~&  >>  state  [~ this]
     ?:  ?=(%print q.vase)
       =/  his  (flop history)
       ?~  his  ~&  >>>  "no blocks found"  [~ this]
       ~&  >>  last-block=i.his  [~ this]
-    ?:  ?=(%nuke q.vase)   
+    ?:  ?=(%nuke q.vase)
       ~&  "nuking state"
       =.  state  *state-0
-      :_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd] 
+      :_  this(robin nodes)  [fake-pki-card:hd watch-cards:hd]
+    ::  TODO pause poke?
+    ::  actual checks
+    ::    throw away unrecognized pokes
     =/  uaction  ((soft action) q.vase)
     ?~  uaction  [~ this]
     =/  action  u.uaction
     ?-  -.action
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
-      %vote       (handle-vote +.action)
+      :: %vote       (handle-vote +.action)
     ==
   ++  handle-start
     |=  ts=@da
@@ -84,11 +92,14 @@ $:  %0
     :: =/  new-block  [s init-block]
     :: ~&  >  signing-block=eny.bowl
     =.  state
-    %=  state
-      block.local   init-block
-      qc.local  ~
-      start-time  ts
-    ==
+      %=  state
+        block.local   init-block
+        qc.local  ~
+        start-time  ts
+      ==
+    :: =.  block.local  init-block
+    :: =.  qc.local  ~
+    :: =.  start-time  ts
     ?~  robin  [~ this]
     ?.  .=(src.bowl i.robin)  [~ this]
     :_  this  
@@ -96,32 +107,21 @@ $:  %0
         (bootstrap-cards:hd ts)
   ++  handle-broadcast
     |=  =qc  ^-  (quip card _this)
-    ~&  handling-broadcast=[src.bowl height.qc round.qc stage.qc]
-    ?:  (lth height.qc height.local)  ~&  "broadcast height below current"  [~ this]
-    :-  ~  
-    =/  old-quorum  (~(get by vote-store) -.qc)
-    =/  nq  ?~  old-quorum  +.qc  (~(uni in u.old-quorum) +.qc)
-    ~&  "commiting broadcast to store"
-    %=  this
-      vote-store  (~(put by vote-store) -.qc nq)
-    ==
-  ++  handle-vote
-    |=  [s=signature =vote]
-    ^-  (quip card _this)
-    ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
-    ?.  =(height.vote height.local)  [~ this]
-    =/  pass  (~(get bi:mip pki-store) q.s r.s)
-    ?~  pass  ~&  "no keys found"  [~ this]
-    =/  msg  (jam block.vote)
+    ?:  (lth height.qc height.local)
+      ~&  "broadcast height below current"
+      [~ this]
+    =/  =vote  -.qc
+    =/  sigs=(list signature)  ~(tap in quorum.qc)
+    |-
+    ?~  sigs  [~ this]
+    =/  sig  i.sigs
+    =/  pass  (~(get bi:mip pki-store) q.sig r.sig)
+    ?~  pass  $(sigs t.sigs)
+    =/  msg  (jam vote)
     =/  keys  (com:nu:crub u.pass)
-    ?.  (safe:as:keys p.s msg)  
-      ~&  "vote signature invalid"  [~ this]
-    :-  ~
-    :: =/  old-quorum  (~(get by vote-store) vote)
-    :: =/  nq  ?~  old-quorum  (silt ~[s])  (~(put in u.old-quorum) s)
-    %=  this
-      vote-store  (~(put ju vote-store) vote s)
-    ==
+    ?.  (safe:as:keys p.sig msg)
+      $(sigs t.sigs)
+    $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   --
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-agent  
@@ -171,7 +171,8 @@ $:  %0
       :_  increment-step  :-  timer-card  %-  broadcast-cards:hd
       =/  =vote  [block.local height.local round.local %1]
       ~&  >  leader-vote=[block.local height=height.local round=round.local]
-      [vote ~]
+      =/  sig=(set signature)  (silt ~[[(sigh:as:keys (jam vote)) our.bowl our-life]])
+      [vote sig]
         ::
         %2  
       ?~  robin  bail
@@ -327,7 +328,8 @@ $:  %0
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
 ++  vote-card
   |=  [s=signature =vote sip=@p]
-  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%vote [s vote]])]]
+  =/  p  [vote (silt ~[s])]
+  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
 ::
 ++  timer-card  ^-  card
   [%pass /step %arvo %b %wait (find-time step.local)]

@@ -16,7 +16,7 @@
     %+  skim  ~(tap by vote-store)
     |=  i=qc  ^-  ?
     :: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
-    ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
+    ?&  %+  gte  ~(wyt in quorum.i)  (sm (lent nodes))
         .=(height.ref height.i)
         .=(round.ref round.i)
         .=(stage.ref stage.i)
@@ -56,7 +56,7 @@
     %+  sort
     %+  skim  ~(tap by vote-store)
     |=  i=qc  ^-  ?
-    ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
+    ?&  %+  gte  ~(wyt in quorum.i)  (sm (lent nodes))
         (gte height.i height)
         .=(%2 stage.i)
     ==
@@ -81,7 +81,7 @@
     ==
   ++  valid
     |=  =qc  ^-  ?
-    %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
+    %+  gte  ~(wyt in quorum.qc)  (sm (lent nodes))
   --
 --
   
