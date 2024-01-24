@@ -9,12 +9,11 @@ $:  %0
     robin=(list node)  :: node order, round-robin
     =height
     =block
-    :: qc-store=(set (pair node qc))  :: pair of ship sending the qc and qc  
-    =vote-store
-    =qc   ::  quorum certificate
+    qc=(unit qc)   ::  quorum certificate
     =round
     =step
     =history
+    =vote-store
     start-time=_~2050.1.1
     ::  keys
     our-life=@ud
@@ -83,7 +82,7 @@ $:  %0
     =.  state
     %=  state
       block   init-block
-      qc     [[init-block height round %1] ~]
+      qc  ~
       start-time  ts
     ==
     ?~  robin  [~ this]
@@ -106,7 +105,7 @@ $:  %0
     |=  [s=signature =vote]
     ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
     ?.  =(height.vote height)  [~ this]
-    =/  voter-keys  (~(get bi:mip pki-store) src.bowl r.s)
+    =/  voter-keys  (~(get bi:mip pki-store) q.s r.s)
     ?~  voter-keys  ~&  "no keys found"  [~ this]
     =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
     =/  ver  (sure:as:crub p.s)
@@ -160,7 +159,7 @@ $:  %0
       =.  state  ?~  most-recent  state
       %=  state
         block  block.u.most-recent
-        qc     u.most-recent
+        qc     (some u.most-recent)
       ==
       :_  increment-step  :-  timer-card  %-  broadcast-cards:hd
       =/  =vote  [block height round %1]
@@ -171,7 +170,9 @@ $:  %0
       =/  lbl  latest-by-leader:hd
       ::  this logic is faulty
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
-      =/  received-new  (as-recent-qc:hd u.lbl qc)
+      =/  received-new
+        ?~  qc  %.y
+        (as-recent-qc:hd u.lbl u.qc)
       ~&  >>>  received-new=received-new
       ~&  [my-height=height lbl-height=height.u.lbl]
       ~&  [my-round=round lbl-round=round.u.lbl]
@@ -180,7 +181,7 @@ $:  %0
       =.  state
       %=  state
         block  block.u.lbl     
-        qc     u.lbl
+        qc     lbl
       ==
       :_  increment-step  :-  timer-card  
       =/  =vote  [block.u.lbl height round %1]
@@ -193,7 +194,7 @@ $:  %0
       =.  state
       %=  state
         block  block.i.valid
-        qc     i.valid
+        qc     (some i.valid)
       ==
       :_  increment-step  :-  timer-card
       =/  vote  [block.i.valid height round %2]
@@ -212,7 +213,7 @@ $:  %0
           (snoc history block.i.valid)  
         height  +(height)
         block  init-block
-        qc     [[init-block +(height) +(round) %1] ~]
+        qc     ~
       ==
       :_  increment-step
       :-  addendum-card
@@ -233,7 +234,7 @@ $:  %0
         (snoc history block.i.valid)  
       height  +(height)
       block  init-block
-      qc     [[init-block +(height) +(round) %1] ~]
+      qc     ~ 
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
