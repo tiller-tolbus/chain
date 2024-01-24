@@ -4,7 +4,7 @@
 +$  action
   $%  [%start ts=@da]
       [%broadcast =qc]
-      [%vote s=signature vote]
+      :: [%vote s=signature vote]
   ==
 +$  history  (list block)
 +$  block
@@ -13,7 +13,7 @@
       ts=@da
       =height
       last=quorum
-  == 
+  ==
 :: +$  signed-block  (pair signature block)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
@@ -36,10 +36,10 @@
   ==
 :: +$  raw-signed-vote  @
 :: +$  signed-vote  [signature=@ =node =vote]  ::  signatures are a jam of [signed-msg msg] so we can cue the vote out of it
-+$  signed-vote  signature
-+$  quorum  (set signed-vote)
-+$  qc  [vote quorum]  :: provisional qc, no guarantees of majority
-+$  vote-store  (map vote quorum)
+:: +$  signed-vote  signature
++$  quorum  (set signature)
++$  qc  [vote =quorum]  :: provisional qc, no guarantees of majority
++$  vote-store  (jug vote signature)
 ::  constants
 ++  nodes  ^-  (list node)
 :~  ~zod
