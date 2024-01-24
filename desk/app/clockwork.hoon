@@ -1,5 +1,5 @@
 /-  *clockwork, pki=pki-store
-/+  dbug, mip
+/+  lib=clockwork, dbug, mip
 |%
 +$  versioned-state
 $%  state-0
@@ -7,11 +7,14 @@ $%  state-0
 +$  state-0
 $:  %0
     robin=(list node)  :: node order, round-robin
-    =height
-    =block
-    qc=(unit qc)   ::  quorum certificate
-    =round
-    =step
+    $=  local           :: local variables from spec
+      $:
+        =height
+        =block
+        qc=(unit qc)   ::  quorum certificate
+        =round
+        =step
+      ==
     =history
     =vote-store
     start-time=_~2050.1.1
@@ -73,16 +76,16 @@ $:  %0
   ++  handle-start
     |=  ts=@da
     ~&  handling-start=ts
-    ?.  =(*^block block)  [~ this]
+    ?.  =(*block block.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=^block   [our.bowl eny.bowl ts height ~]
+    =/  init-block=block   [our.bowl eny.bowl ts height.local ~]
     :: =/  s=signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
     :: =/  new-block  [s init-block]
     :: ~&  >  signing-block=eny.bowl
     =.  state
     %=  state
-      block   init-block
-      qc  ~
+      block.local   init-block
+      qc.local  ~
       start-time  ts
     ==
     ?~  robin  [~ this]
@@ -91,9 +94,9 @@ $:  %0
     :-  timer-card:hd
         (bootstrap-cards:hd ts)
   ++  handle-broadcast
-    |=  =^qc  ^-  (quip card _this)
+    |=  =qc  ^-  (quip card _this)
     ~&  handling-broadcast=[src.bowl height.qc round.qc]
-    ?:  (lth height.qc height)  ~&  "broadcast height below current"  [~ this]
+    ?:  (lth height.qc height.local)  ~&  "broadcast height below current"  [~ this]
     :-  ~  
     =/  old-quorum  (~(get by vote-store) -.qc)
     =/  nq  ?~  old-quorum  +.qc  (~(uni in u.old-quorum) +.qc)
@@ -104,7 +107,7 @@ $:  %0
   ++  handle-vote
     |=  [s=signature =vote]
     ~&  handling-vote=[src.bowl height.vote round.vote stage.vote]
-    ?.  =(height.vote height)  [~ this]
+    ?.  =(height.vote height.local)  [~ this]
     =/  voter-keys  (~(get bi:mip pki-store) q.s r.s)
     ?~  voter-keys  ~&  "no keys found"  [~ this]
     =/  crub=acru:ames  (com:nu:crub:crypto u.voter-keys)
@@ -140,8 +143,9 @@ $:  %0
   ==
 ++  on-arvo   
   |=  [=(pole knot) =sign-arvo]  
-  ~&  >>>  timer-pinged-at=[pole height=height round=round step=step]
-  =/  next-timer  (find-time +(step))
+  ^-  (quip card _this)
+  ~&  >>>  timer-pinged-at=[pole height=height.local round=round.local step=step.local]
+  =/  next-timer  (find-time +(step.local))
   |^
   ?:  ?=(%jael -.sign-arvo)  (update-keys +.sign-arvo)
   ?.  ?=(%behn -.sign-arvo)  [~ this]
@@ -149,71 +153,73 @@ $:  %0
       [%step ~]  
     ~&  >  current-time=[m s f]:(yell now.bowl)
     ~&  >>  nexttimer-at=[m s f]:(yell next-timer)
-    ?-  step
+    ?-  step.local
         %1
       ?~  robin  bail
       ~&  >>  leader=i.robin
       ?.  .=(our.bowl i.robin)  bail
-      =/  most-recent  find-most-recent:hd
+      =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
       =.  state  ?~  most-recent  state
       %=  state
-        block  block.u.most-recent
-        qc     (some u.most-recent)
+        block.local  block.u.most-recent
+        qc.local     (some u.most-recent)
       ==
       :_  increment-step  :-  timer-card  %-  broadcast-cards:hd
-      =/  =vote  [block height round %1]
-      ~&  >  leader-vote=[block height=height round=round]
+      =/  =vote  [block.local height.local round.local %1]
+      ~&  >  leader-vote=[block.local height=height.local round=round.local]
       [vote ~]
         ::
         %2  
-      =/  lbl  latest-by-leader:hd
-      ::  this logic is faulty
+      ?~  robin  bail
+      =/  leader=node  i.robin
+      :: =/  init-vs  ~(. vs vote-store)
+      =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
-      =/  received-new
-        ?~  qc  %.y
-        (as-recent-qc:hd u.lbl u.qc)
-      ~&  >>>  received-new=received-new
-      ~&  [my-height=height lbl-height=height.u.lbl]
-      ~&  [my-round=round lbl-round=round.u.lbl]
-      ::  fix this shit
+      ?.  (gte height.u.lbl height.local)  bail
+      =/  received-new=?
+        ?~  qc.local  %.y
+        (as-recent:qcu:lib u.lbl u.qc.local)
+      ~&  >  received-new=received-new
+      :: ~&  [my-height=height lbl-height=height.u.lbl]
+      :: ~&  [my-round=round lbl-round=round.u.lbl]
       ?.  received-new  bail
       =.  state
       %=  state
-        block  block.u.lbl     
-        qc     lbl
+        block.local  block.u.lbl     
+        qc.local     lbl
       ==
       :_  increment-step  :-  timer-card  
-      =/  =vote  [block.u.lbl height round %1]
-      ~&  >>  voting=[height round %1]
+      =/  =vote  [block.u.lbl height.local round.local %1]
+      ~&  >>  voting=[height.local round.local %1]
       (broadcast-and-vote:hd u.lbl vote)
         ::
         %3  
-      =/  valid  (valid-qcs:hd %1) 
+      =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %1) 
       ?~  valid  ~&  "no valid qcs at stage 1"  bail
       =.  state
       %=  state
-        block  block.i.valid
-        qc     (some i.valid)
+        block.local  block.i.valid
+        qc.local     (some i.valid)
       ==
       :_  increment-step  :-  timer-card
-      =/  vote  [block.i.valid height round %2]
-      ~&  >>  voting=[height round %2]
+      =/  vote  [block.i.valid height.local round.local %2]
+      ~&  >>  voting=[height.local round.local %2]
       (broadcast-and-vote:hd i.valid vote)
         %4  
-      =/  valid  (valid-qcs:hd %2)         
+      =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %2)         
       ?~  valid  ~&  "no valid qcs at stage 2"  addendum
-      =/  init-block  [our.bowl eny.bowl now.bowl +(height) ~]
+      =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]
       :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
       :: =/  new-block  [signature init-block]
       =.  state
       %=  state
         history  
-          ~&  >>  block-commited=[h=height r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+          ~&  >>  block-commited=[h=height.local r=round.local who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
           (snoc history block.i.valid)  
-        height  +(height)
-        block  init-block
-        qc     ~
+        height.local  +(height.local)
+        block.local  init-block
+        qc.local     ~
       ==
       :_  increment-step
       :-  addendum-card
@@ -221,29 +227,29 @@ $:  %0
       (broadcast-cards:hd i.valid)
     ==
       [%addendum ~]  
-    =/  valid  future-blocks:hd
-    =|  new-cards=(list card)         
+    =/  valid  (~(future-blocks vs:lib vote-store) height.local)
+    =|  new-cards=(list card)
     |-
     ?~  valid  :_  increment-round  new-cards
-    =/  init-block  [our.bowl eny.bowl now.bowl +(height) ~]            
+    =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]            
     :: =/  =signature  [(sign:as:keys (jam init-block)) our.bowl our-life]
     :: =/  new-block  [signature init-block]
     %=  $
       history  
-        ~&  >>  block-commited=[h=height r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+        ~&  >>  block-commited=[h=height.local r=round.local who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
         (snoc history block.i.valid)  
-      height  +(height)
-      block  init-block
-      qc     ~ 
+      height.local  +(height.local)
+      block.local  init-block
+      qc.local     ~ 
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
    ==
   ++  increment-round
     %=  this
-      round  +(round)
+      round.local  +(round.local)
       robin  shuffle-robin
-      step  %1
+      step.local  %1
     ==
   ++  addendum
     :_  this  
@@ -254,8 +260,8 @@ $:  %0
     ?~  robin  robin
     (snoc t.robin i.robin)
   ++  increment-step
-    =/  new-step  ?-(step %1 %2, %2 %3, %3 %4, %4 %1)
-    this(step new-step)
+    =/  new-step  ?-(step.local %1 %2, %2 %3, %3 %4, %4 %1)
+    this(step.local new-step)
   ++  bail  :_  increment-step  :~(timer-card)
   ::  %jael
   ++  update-keys
@@ -278,84 +284,13 @@ $:  %0
   --
 --
 |_  =bowl:gall
-++  future-blocks  ^-  (list ^qc)
-  %+  sort
-  %+  skim  ~(tap by vote-store)
-  |=  i=^qc  ^-  ?
-  ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
-      (gte height.i height)
-      .=(%2 stage.i)
-  ==
-  |=  [a=^qc b=^qc]  (gth height.a height.b)
-++  valid-qcs  
-  |=  stage=?(%1 %2)
-  ^-  (list ^qc)  ::  there should only be one but w/e
-  ~&  checking-qcs=[stage round height]
-  %+  skim  ~(tap by vote-store)
-  |=  i=^qc  ^-  ?
-  :: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
-  ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
-      .=(height height.i)
-      .=(round round.i)
-      .=(stage stage.i)
-  ==
-++  majority-qcs
-  %+  skim  ~(tap by vote-store)
-  |=  i=^qc  ^-  ?
-  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
-++  latest-by-leader  ^-  (unit ^qc)
-  ?~  robin  ~
-  =/  leader  i.robin
-  ~&  leader=[leader our.bowl height round]
-  %+  roll  ~(tap by vote-store)
-  |=  [i=^qc acc=(unit ^qc)]
-  ?.  =(mint.block.i leader)  acc
-  :: validate signature
-  :: =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
-  :: ?~  leader-keys  ~&  "leader keys not found"  acc
-  :: =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
-  :: =/  s=signature  -.block.i
-  :: =/  ver  (sure:as:crub p.s)
-  :: ?~  ver  ~&  "leader signature on block untrue"  acc
-  ?.  =(height height.i)  acc
-  ?~  acc  (some i)
-  ?:  (more-recent-qc i u.acc)  (some i)  acc
-++  find-most-recent  ^-  (unit ^qc)
-  %+  roll  ~(tap by vote-store) 
-  |=  [i=^qc acc=(unit ^qc)]
-  ?.  (validate-qc i)  acc
-  ?.  =(height height.i)  acc
-  ?~  acc  (some i)
-  ?:  (more-recent-qc i u.acc)  (some i)  acc
   ::
-++  as-recent-qc
-  |=  [a=^qc b=^qc]  ^-  ?
-  ?:  (gte round.a round.b)  .y
-  ?&  =(round.a round.b)
-       (gte stage.a stage.b)
-  ==
-  ::
-++  more-recent-qc
-  |=  [a=^qc b=^qc]  ^-  ?
-  ?:  (gth round.a round.b)  .y
-  ?&  =(round.a round.b)
-       (gth stage.a stage.b)
-  ==
-  ::
-++  sm
-  |=  a=@ud  ^-  @ud
-  =/  q  (dvr (mul a 2) 3)
-  ?:  .=(0 +.q)  -.q  +(-.q)
-  ::
-++  validate-qc
-  |=  =^qc  ^-  ?
-  %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
 ++  find-time  |=  stp=@ud  ^-  @da
   ~&  finding-time-for-step=stp
   %+  add  start-time
   %+  mul  delta
   %+  add  
-  %+  mul  4  round  stp
+  %+  mul  4  round.local  stp
 ::  cards
 ++  watch-cards
   ^-  (list card)
@@ -365,7 +300,8 @@ $:  %0
     [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
   ==
 ++  broadcast-and-vote
-  |=  [p=^qc =vote]
+  |=  [p=qc =vote]
+  ^-  (list card)
   =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
   %+  roll  nodes  |=  [i=@p acc=(list card)]
   %+  weld  acc
@@ -373,17 +309,17 @@ $:  %0
       (vote-card signature vote i)
   ==
 ++  broadcast-cards
-  |=  p=^qc  ^-  (list card)
+  |=  p=qc  ^-  (list card)
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 
 ++  broadcast-card
-  |=  [p=^qc sip=ship]  ^-  card
+  |=  [p=qc sip=ship]  ^-  card
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
 ++  vote-card
   |=  [s=signature =vote sip=@p]
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%vote [s vote]])]]
 ::
 ++  timer-card  ^-  card
-  [%pass /step %arvo %b %wait (find-time step)]
+  [%pass /step %arvo %b %wait (find-time step.local)]
 ++  bootstrap-cards
   |=  ts=@da
   %+  turn  nodes  |=  sip=@p
