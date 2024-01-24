@@ -1,5 +1,5 @@
 /-  *clockwork, pki=pki-store
-/+  dbug, mip
+/+  lib=clockwork, dbug, mip
 |%
 +$  versioned-state
 $%  state-0
@@ -140,6 +140,7 @@ $:  %0
   ==
 ++  on-arvo   
   |=  [=(pole knot) =sign-arvo]  
+  ^-  (quip card _this)
   ~&  >>>  timer-pinged-at=[pole height=height round=round step=step]
   =/  next-timer  (find-time +(step))
   |^
@@ -167,16 +168,18 @@ $:  %0
       [vote ~]
         ::
         %2  
-      =/  lbl  latest-by-leader:hd
-      ::  this logic is faulty
+      ?~  robin  bail
+      =/  leader=node  i.robin
+      :: =/  init-vs  ~(. vs vote-store)
+      =/  lbl=(unit qc)  (latest-by:vs:lib leader)
       ?~  lbl  ~&  "no recent vote from leader found"  bail       
-      =/  received-new
+      :: ?.  (gte height.u.lbl height)  bail
+      =/  received-new=?
         ?~  qc  %.y
-        (as-recent-qc:hd u.lbl u.qc)
-      ~&  >>>  received-new=received-new
-      ~&  [my-height=height lbl-height=height.u.lbl]
-      ~&  [my-round=round lbl-round=round.u.lbl]
-      ::  fix this shit
+        (as-recent:qcs:lib u.lbl u.qc)
+      ~&  >  received-new=received-new
+      :: ~&  [my-height=height lbl-height=height.u.lbl]
+      :: ~&  [my-round=round lbl-round=round.u.lbl]
       ?.  received-new  bail
       =.  state
       %=  state
@@ -221,8 +224,8 @@ $:  %0
       (broadcast-cards:hd i.valid)
     ==
       [%addendum ~]  
-    =/  valid  future-blocks:hd
-    =|  new-cards=(list card)         
+    =/  valid  (~(future-blocks vs vote-store) height)
+    =|  new-cards=(list card)
     |-
     ?~  valid  :_  increment-round  new-cards
     =/  init-block  [our.bowl eny.bowl now.bowl +(height) ~]            
@@ -278,15 +281,6 @@ $:  %0
   --
 --
 |_  =bowl:gall
-++  future-blocks  ^-  (list ^qc)
-  %+  sort
-  %+  skim  ~(tap by vote-store)
-  |=  i=^qc  ^-  ?
-  ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
-      (gte height.i height)
-      .=(%2 stage.i)
-  ==
-  |=  [a=^qc b=^qc]  (gth height.a height.b)
 ++  valid-qcs  
   |=  stage=?(%1 %2)
   ^-  (list ^qc)  ::  there should only be one but w/e
@@ -294,7 +288,7 @@ $:  %0
   %+  skim  ~(tap by vote-store)
   |=  i=^qc  ^-  ?
   :: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
-  ?&  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
+  ?&  %+  gte  ~(wyt in +.i)  (sm:lib (lent nodes))
       .=(height height.i)
       .=(round round.i)
       .=(stage stage.i)
@@ -302,54 +296,18 @@ $:  %0
 ++  majority-qcs
   %+  skim  ~(tap by vote-store)
   |=  i=^qc  ^-  ?
-  %+  gte  ~(wyt in +.i)  (sm (lent nodes))
-++  latest-by-leader  ^-  (unit ^qc)
-  ?~  robin  ~
-  =/  leader  i.robin
-  ~&  leader=[leader our.bowl height round]
-  %+  roll  ~(tap by vote-store)
-  |=  [i=^qc acc=(unit ^qc)]
-  ?.  =(mint.block.i leader)  acc
-  :: validate signature
-  :: =/  leader-keys  (~(get bi:mip pki-store) leader r.p.block.i)
-  :: ?~  leader-keys  ~&  "leader keys not found"  acc
-  :: =/  crub=acru:ames  (com:nu:crub:crypto u.leader-keys)
-  :: =/  s=signature  -.block.i
-  :: =/  ver  (sure:as:crub p.s)
-  :: ?~  ver  ~&  "leader signature on block untrue"  acc
-  ?.  =(height height.i)  acc
-  ?~  acc  (some i)
-  ?:  (more-recent-qc i u.acc)  (some i)  acc
+  %+  gte  ~(wyt in +.i)  (sm:lib (lent nodes))
 ++  find-most-recent  ^-  (unit ^qc)
   %+  roll  ~(tap by vote-store) 
   |=  [i=^qc acc=(unit ^qc)]
   ?.  (validate-qc i)  acc
   ?.  =(height height.i)  acc
   ?~  acc  (some i)
-  ?:  (more-recent-qc i u.acc)  (some i)  acc
-  ::
-++  as-recent-qc
-  |=  [a=^qc b=^qc]  ^-  ?
-  ?:  (gte round.a round.b)  .y
-  ?&  =(round.a round.b)
-       (gte stage.a stage.b)
-  ==
-  ::
-++  more-recent-qc
-  |=  [a=^qc b=^qc]  ^-  ?
-  ?:  (gth round.a round.b)  .y
-  ?&  =(round.a round.b)
-       (gth stage.a stage.b)
-  ==
-  ::
-++  sm
-  |=  a=@ud  ^-  @ud
-  =/  q  (dvr (mul a 2) 3)
-  ?:  .=(0 +.q)  -.q  +(-.q)
+  ?:  (more-recent:qcs:lib i u.acc)  (some i)  acc
   ::
 ++  validate-qc
   |=  =^qc  ^-  ?
-  %+  gte  ~(wyt in +.qc)  (sm (lent nodes))
+  %+  gte  ~(wyt in +.qc)  (sm:lib (lent nodes))
 ++  find-time  |=  stp=@ud  ^-  @da
   ~&  finding-time-for-step=stp
   %+  add  start-time
@@ -366,6 +324,7 @@ $:  %0
   ==
 ++  broadcast-and-vote
   |=  [p=^qc =vote]
+  ^-  (list card)
   =/  =signature  [(sign:as:keys (jam vote)) our.bowl our-life]
   %+  roll  nodes  |=  [i=@p acc=(list card)]
   %+  weld  acc
