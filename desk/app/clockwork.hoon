@@ -144,7 +144,7 @@ $:  %0
 ++  on-arvo   
   |=  [=(pole knot) =sign-arvo]  
   ^-  (quip card _this)
-  ~&  >>>  timer-pinged-at=[pole height=height.local round=round.local step=step]
+  ~&  >>>  timer-pinged-at=[pole height=height.local round=round.local step=step.local]
   =/  next-timer  (find-time +(step.local))
   |^
   ?:  ?=(%jael -.sign-arvo)  (update-keys +.sign-arvo)
