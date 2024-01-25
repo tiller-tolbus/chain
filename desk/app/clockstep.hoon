@@ -33,6 +33,7 @@ $:  %0
 ++  on-peek   |=(=(pole knot) ~)  
 ++  on-poke   
   |=  [=mark =vase] 
+  ?.  .=(src.bowl our.bowl)  [~ this]
   ?.  ?=(%noun mark)  [~ this]
   ::  dev
   ?:  ?=([%delta @dr] q.vase)  :-  ~  this(delta +.q.vase)
@@ -53,7 +54,7 @@ $:  %0
   ?.  ?=(%behn -.sign-arvo)  [~ this]
   ?+  pole  [~ this]
       [%delta ~]  =.  count  +(count)
-    :_  this  ~[fact-card:hd (timer-card:hd now.bowl)]
+    :_  this  ~[fact-card:hd (timer-card:hd (add start-time (mul delta count)))]
   ==
 --
 |_  =bowl:gall
