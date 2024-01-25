@@ -152,6 +152,7 @@ $:  %0
       ?.  .=(our.bowl i.robin)  bail
       =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
+      ?.  (more-recent:qcu:lib most-recent qc.local)  bail
       =.  state  ?~  most-recent  state
       %=  state
         block.local  block.u.most-recent
@@ -159,11 +160,11 @@ $:  %0
       ==
       :_  increment-step  :-  timer-card  %-  broadcast-cards:hd
       =/  =vote  [block.local height.local round.local %1]
-      ~&  >  leader-vote=[block.local height=height.local round=round.local]
+      :: ~&  >  leader-vote=[block.local height=height.local round=round.local]
       =/  sig=(set signature)  (silt ~[[(sigh:as:keys (jam vote)) our.bowl our-life]])
       [vote sig]
         ::
-        %2  
+        %2
       ?~  robin  bail
       =/  leader=node  i.robin
       =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
@@ -255,7 +256,7 @@ $:  %0
     this(step.local new-step)
   ++  bail  
     :_  increment-step
-    ~&  ["bail on step" step.local]
+    :: ~&  ["bail on step" step.local]
     :~(timer-card)
   ::  %jael
   ++  update-keys
