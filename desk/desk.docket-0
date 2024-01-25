@@ -1,9 +1,9 @@
-:~  title+'Token'
-    info+'A bag of marbles for your monkey brain.'
+:~  title+'%chain'
+    info+'An Urbit-native L1 blockchain that implements a cryptocurrency $TOKEN.'
     color+0x44ff
     image+''
     version+[0 0 1]
     website+'https://urbit.org/'
     license+'MIT'
-    site+/apps/token
+    site+/apps/chain
 ==
