@@ -122,7 +122,11 @@ $:  %0
   |^
   :: ~>  %bout.[0 '%clockwork +on-agent']
   ?+  pole  [~ this]
+<<<<<<< HEAD
       [%tick ~]
+=======
+      [%timer-sub ~]
+>>>>>>> 0f11f2ec98b72fb3739e18dad4f2337ab44bea0f
     ?:  ?=(%kick -.sign)  :_  this  :~(clockstep-watch-card:hd)
     ?.  ?=(%fact -.sign)  [~ this]  (handle-tick (@ud q.q.cage.sign))
       [%pki-store ~]
@@ -276,6 +280,10 @@ $:  %0
     ==
   ::  %final stage of block syncing
   ++  handle-addendum
+<<<<<<< HEAD
+=======
+  ~>  %bout.[0 '%clockwork +addendum']
+>>>>>>> 0f11f2ec98b72fb3739e18dad4f2337ab44bea0f
     ::  In the addendum stage we look in our vote store for valid qcs of stage %2 of a height
     ::  greater than our local height 
     =/  valid  (~(future-blocks vs:lib vote-store) height.local)
