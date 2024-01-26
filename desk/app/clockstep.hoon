@@ -62,8 +62,8 @@ $:  %0
   ?+  pole  [~ this]
       [%delta ~] 
     ?:  stop  [~ this]
-    =.  count  +(count)
-    :_  this  ~[fact-card:hd (timer-card:hd (add start-time (mul delta count)))]
+    :_  this(count +(count))
+    ~[fact-card:hd (timer-card:hd (add start-time (mul delta count)))]
   ==
 --
 |_  =bowl:gall

@@ -146,18 +146,18 @@ $:  %0
   ::  Main agent logic
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
-    ~&  >>>  timer-pinged-at=[pole height=height.local round=round step=step]
-    ~&  >  current-time=[m s f]:(yell now.bowl)
-    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
+    :: ~&  >  current-time=[m s f]:(yell now.bowl)
+    :: ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
     =/  [=round rem=@]  (dvr count 4)
     =/  =step  ;;(step +(rem))
     =/  l-robin  `(list node)`robin
     =/  leader=node  (snag (mod round (lent l-robin)) l-robin)
+    ~&  >>>  timer-pinged-at=[pole height=height.local round=round step=step]
     ?-  step  ::  ~&  ["invalid step" step]  [~ this]
         %1
       ::  In step 1 only the leader votes
-      ~&  >>  leader=i.robin
-      ?.  .=(our.bowl i.robin)  bail
+      ~&  >>  leader=leader
+      ?.  .=(our.bowl leader)  bail
       ::  If we are the leader we look for a qc in our vote store at the current height
       ::  that is more recent (i.e. same height, higher round OR stage)
       ::  than our local state qc. If we find one, we vote for that and update our local
@@ -174,13 +174,12 @@ $:  %0
       :_  this
       %-  broadcast-cards:hd
       =/  =vote  [block.local height.local round %1]
-      ~&  >  leader-vote=[block.local height=height.local round=round]
+      :: ~&  >  leader-vote=[block.local height=height.local round=round]
       =/  sig=(set signature)  (silt ~[[(sigh:as:keys (jam vote)) our.bowl our-life]])
       [vote sig]
         ::
         %2
       ::  In step 2 all nodes come to vote.
-      =/  leader=node  i.robin
       ::  Nodes look for the latest vote by the leader (i.e. what happened on step 1)
       =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
       ::  If the leader didn't vote on step 1 (which really shouldn't happen!) we bail
@@ -260,7 +259,7 @@ $:  %0
   ::   ~&  ["increment step" new-step=new-step]
   ::   this(step new-step)
   ++  bail  
-    ~&  ["bail on step" step]
+    :: ~&  ["bail on step" step]
     :: :-  ~  increment-step
     [~ this]
   --
