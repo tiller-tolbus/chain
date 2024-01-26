@@ -1,7 +1,6 @@
 /-  *clockwork, pki=pki-store
 /+  lib=clockwork,
     dbug,
-    default-agent,
     mip
 =,  crypto
 |%
@@ -37,7 +36,6 @@ $:  %0
 |_  =bowl:gall
 +*  this      .
     hd  ~(. +> bowl)
-    default  ~(. (default-agent this %|) bowl)
 ::
 ++  on-init
   ~&  >  "%chain initialized"
@@ -46,16 +44,19 @@ $:  %0
     :-  fake-pki-card:hd  pki-cards:hd
 ::
 ++  on-leave  |~(* [~ this])
-++  on-fail   on-fail:default
+++  on-fail   
+  |=  [=term =tang]
+  %-  (slog leaf+"error in {<dap.bowl>}" >term< tang)
+  [~ this]
 ++  on-save   !>(state)
 ++  on-load 
   |=  old-state=vase 
-  :_  this(robin nodes)
     ::  dev
+  :_  this(robin nodes)
     :-  clockstep-watch-card:hd  
     :-  fake-pki-card:hd  pki-cards:hd
     ::  prod
-    ::  ~
+    ::  :-  ~  this(state !<(state-0 old-state))
 ::
 ++  on-watch  |=(=(pole knot) [~ this])
 ++  on-poke
@@ -73,7 +74,8 @@ $:  %0
       ?~  his  ~&  >>>  "no blocks found"  [~ this]
       ~&  >>  last-block=i.his  [~ this]
     ?:  ?=(%nuke q.vase)
-      ~&  "nuking state"
+      ~&  >>>  "nuking state"
+      ~&  >>  history=history
       =.  state  *state-0
       :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
     ::  TODO pause poke?
@@ -91,7 +93,7 @@ $:  %0
     ~&  handling-start=ts
     ?.  =(*block block.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=block   [our.bowl eny.bowl ts height.local ~]
+    =/  init-block=block   [our.bowl (end 4 eny.bowl) ts height.local ~]
     =.  block.local  init-block
     =.  qc.local  ~
     ?.  .=(src.bowl i.robin)  [~ this]
@@ -100,8 +102,9 @@ $:  %0
         (bootstrap-cards:hd ts)
   ++  handle-broadcast
     |=  =qc  ^-  (quip card _this)
+    ~&  handling-broadcast=[from=src.bowl h=height.qc r=round.qc s=stage.qc]
     ?:  (lth height.qc height.local)
-      ~&  "broadcast height below current"
+      ~&  bail-height-below-current=[src=height.qc our=height.local]
       [~ this]
     =/  =vote  -.qc
     =/  sigs=(list signature)  ~(tap in quorum.qc)
@@ -120,10 +123,9 @@ $:  %0
 ++  on-agent  
   |=  [=(pole knot) =sign:agent:gall]
   |^
-  :: ~>  %bout.[0 '%clockwork +on-agent']
+  ::  ~>  %bout.[0 '%clockwork +on-agent']
   ?+  pole  [~ this]
       [%tick ~]
-    ~&  ["received tick" wire=pole sign=sign]
     ?:  ?=(%kick -.sign)  :_  this  :~(clockstep-watch-card:hd)
     ?.  ?=(%fact -.sign)  [~ this]  (handle-tick (@ud q.q.cage.sign))
       [%pki-store ~]
@@ -146,17 +148,16 @@ $:  %0
   ::  Main agent logic
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
-    :: ~&  >  current-time=[m s f]:(yell now.bowl)
-    :: ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
-    =/  [=round rem=@]  (dvr count 4)
-    =/  =step  ;;(step +(rem))
-    =/  l-robin  `(list node)`robin
-    =/  leader=node  (snag (mod round (lent l-robin)) l-robin)
-    ~&  >>>  timer-pinged-at=[pole height=height.local round=round step=step]
-    ?-  step  ::  ~&  ["invalid step" step]  [~ this]
+    =/  [=round rem=@]  (dvr (dec count) 4)
+    =/  =step  (step +(rem))
+    =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
+    ~&  >>>  timer-pinged-at=[count=count height=height.local round=round step=step]
+    ~&  >  current-time=[m s f]:(yell now.bowl)
+    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
+    ?-  step  
         %1
-      ::  In step 1 only the leader votes
       ~&  >>  leader=leader
+      ::  In step 1 only the leader votes
       ?.  .=(our.bowl leader)  bail
       ::  If we are the leader we look for a qc in our vote store at the current height
       ::  that is more recent (i.e. same height, higher round OR stage)
@@ -206,9 +207,9 @@ $:  %0
         qc.local     lbl
       ==
       :_  this
-      =/  =vote  [block.u.lbl height.local round %1]
+      =/  =vote  [block.u.lbl height.u.lbl round %1]
       ~&  >>  voting=[height.local round %1]
-      (broadcast-and-vote:hd u.lbl vote)
+      (vote-and-broadcast u.lbl vote)
         ::
         %3
       ::  In step 2 we should have received votes from 2/3 of the nodes for some block
@@ -225,7 +226,7 @@ $:  %0
       :_  this
       =/  vote  [block.i.valid height.local round %2]
       ~&  >>  voting=[height.local round %2]
-      (broadcast-and-vote:hd i.valid vote)
+      (vote-and-broadcast i.valid vote)
         %4  
       ::  Same as above, we should have received 2/3 of stage %2 votes for something
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round %2)         
@@ -235,11 +236,13 @@ $:  %0
       ::  If all good we commit the block to history, reset local block and qc,
       ::  increment height
       ::  then broadcast the qc of the committed block to sync everyone's vote store
-      =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]
+      =/  init-block  [our.bowl (end 4 eny.bowl) now.bowl +(height.local) ~]
       =.  state
       %=  state
         history  
-          ~&  >>  block-commited=[h=height.local r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+          ~&  >  ~
+          ~&  >  block-commited=[h=height.local r=round who=mint.block.i.valid noun=noun.block.i.valid]
+          ~&  >  ~
           (snoc history block.i.valid)  
         height.local  +(height.local)
         block.local  init-block
@@ -250,17 +253,20 @@ $:  %0
       :-  addendum-card:hd
       (broadcast-cards:hd i.valid)
     ==
+++  vote-and-broadcast
+  |=  [p=qc =vote]  ^-  (list card)
+  =/  =signature  [(sigh:as:keys (jam vote)) our.bowl our-life]
+  %+  roll  `(list @p)`nodes  |=  [i=@p acc=(list card)]
+  %+  weld  acc
+  :~  (broadcast-card p i)
+      (vote-card signature vote i)
+  ==
   ++  schedule-addendum
     :_  this
     :~  addendum-card:hd
     ==
-  :: ++  increment-step
-  ::   =/  new-step  ?-(step %1 %2, %2 %3, %3 %4, %4 %1)
-  ::   ~&  ["increment step" new-step=new-step]
-  ::   this(step new-step)
   ++  bail  
-    :: ~&  ["bail on step" step]
-    :: :-  ~  increment-step
+    ~&  "bail"
     [~ this]
   --
 ++  on-arvo   
@@ -286,6 +292,7 @@ $:  %0
     ==
   ::  %final stage of block syncing
   ++  handle-addendum
+    ~&  >>  addendum-phase=[m s f]:(yell now.bowl)
     ^-  (quip card _this)
     ::  In the addendum stage we look in our vote store for valid qcs of stage %2 of a height
     ::  greater than our local height 
@@ -295,10 +302,12 @@ $:  %0
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]            
+    =/  init-block  [our.bowl (end 4 eny.bowl) now.bowl +(height.local) ~]            
     %=  $
       history  
-        ~&  >>  block-commited=[h=height.local r=round who=mint.block.i.valid noun=(@uw noun.block.i.valid)]
+        ~&  >  ~
+        ~&  >  block-commited=[h=height.local who=mint.block.i.valid noun=noun.block.i.valid]
+        ~&  >  ~
         (snoc history block.i.valid)  
       height.local  +(height.local)
       block.local  init-block
@@ -335,15 +344,6 @@ $:  %0
 ++  pki-watch-card
   ::  subscribe to pki-store updates
   [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
-++  broadcast-and-vote
-  |=  [p=qc =vote]
-  ^-  (list card)
-  =/  =signature  [(sigh:as:keys (jam vote)) our.bowl our-life]
-  %+  roll  `(list @p)`nodes  |=  [i=@p acc=(list card)]
-  %+  weld  acc
-  :~  (broadcast-card p i)
-      (vote-card signature vote i)
-  ==
 ++  broadcast-cards
   |=  p=qc  ^-  (list card)
   %+  turn  nodes  |=  s=@p  (broadcast-card p s) 

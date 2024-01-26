@@ -58,7 +58,7 @@ $:  %0
 ++  on-arvo   
   |=  [=(pole knot) =sign-arvo]  
   ?.  ?=(%behn -.sign-arvo)  [~ this]
-  ~&  ["clockstep: behn" pole]
+  :: ~&  ["clockstep: behn" pole]
   ?+  pole  [~ this]
       [%delta ~] 
     ?:  stop  [~ this]
@@ -71,6 +71,5 @@ $:  %0
   |=  =time  ^-  card
   [%pass /delta %arvo %b %wait (add delta time)]
 ++  fact-card  ^-  card
-  :: ~&  "giving fact"
   [%give %fact ~[/tick] [%noun !>(count)]]
 --
