@@ -7,6 +7,7 @@ $%  state-0
 $:  %0
     start-time=@da
     count=@ud
+    stop=$~(%.y ?)
     ::dev
     delta=_~s3
 ==
@@ -30,7 +31,7 @@ $:  %0
   =/  prev  !<(state-0 old-state)
   [~ this(state prev)]
 ++  on-init  [~ this]
-++  on-peek   |=(=(pole knot) ~)  
+++  on-peek  |=(=(pole knot) ~)  
 ++  on-poke   
   |=  [=mark =vase] 
   ?.  .=(src.bowl our.bowl)  [~ this]
@@ -38,22 +39,30 @@ $:  %0
   ::  dev
   ?:  ?=([%delta @dr] q.vase)  :-  ~  this(delta +.q.vase)
   ::  prod
-  ?:  ?=([%start @da] q.vase)  :-  :~((timer-card +.q.vase))
-    this(start-time +.q.vase)
+  ?+  q.vase  [~ this]
+      [%start @da]
+    :-  :~((timer-card +.q.vase))
+    this(stop %.n, start-time +.q.vase, count 0)
+      %stop
+    [~ this(stop %.y)]  
+  ==
   ::
-  [~ this]
 ++  on-watch  
   |=  =(pole knot)
-  :: Only allow %delta subscriptions from our own %clockwork agent
+  ~&  ["clockstep: on-watch" pole]
+  :: Only allow %tick subscriptions from our own %clockwork agent
   ?.  .=(src.bowl our.bowl)  !!
   ?.  .=(/gall/clockwork sap.bowl)  !!
-  ?.  ?=([%delta ~] pole)  !!  [~ this]
+  ?.  ?=([%tick ~] pole)  !!  [~ this]
 ++  on-agent  |=([=wire =sign:agent:gall] [~ this])
 ++  on-arvo   
   |=  [=(pole knot) =sign-arvo]  
   ?.  ?=(%behn -.sign-arvo)  [~ this]
+  ~&  ["clockstep: behn" pole]
   ?+  pole  [~ this]
-      [%delta ~]  =.  count  +(count)
+      [%delta ~] 
+    ?:  stop  [~ this]
+    =.  count  +(count)
     :_  this  ~[fact-card:hd (timer-card:hd (add start-time (mul delta count)))]
   ==
 --
@@ -62,5 +71,6 @@ $:  %0
   |=  =time  ^-  card
   [%pass /delta %arvo %b %wait (add delta time)]
 ++  fact-card  ^-  card
+  :: ~&  "giving fact"
   [%give %fact ~[/tick] [%noun !>(count)]]
 --
