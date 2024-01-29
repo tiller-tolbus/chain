@@ -60,7 +60,7 @@
         (gte height.i height)
         .=(%2 stage.i)
     ==
-    |=  [a=qc b=qc]  (gth height.a height.b)
+    |=  [a=qc b=qc]  (lth height.a height.b)
   --
 ::  qcu: qc utilities
 ++  qcu

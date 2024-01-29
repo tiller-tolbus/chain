@@ -41,12 +41,11 @@
 +$  qc  [vote =quorum]  :: provisional qc, no guarantees of majority
 +$  vote-store  (jug vote signature)
 ::  constants
-++  nodes  ^-  (list node)
+++  nodes  ^-  (lest node)
 :~  ~zod
     ~nec
     ~bud
     ~wes
-    :: ~rus
 ==
 ::  functions
 :: ++  quorum
