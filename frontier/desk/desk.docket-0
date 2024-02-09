@@ -1,0 +1,9 @@
+:~  title+'Frontier'
+    info+'A Snow-class protocol for %chain.'
+    color+0xe4.9b0f
+    image+''
+    version+[0 0 1]
+    website+'https://urbit.org/'
+    license+'MIT'
+    site+/apps/frontier
+==

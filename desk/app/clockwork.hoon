@@ -200,7 +200,7 @@ $:  %0
       =/  vote  [block.i.valid height.local round.local %2]
       ~&  >>  voting=[height.local round.local %2]
       (broadcast-and-vote:hd i.valid vote)
-        %4  
+        %4
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round.local %2)         
       ?~  valid  ~&  "no valid qcs at stage 2"  addendum
       =/  init-block  [our.bowl eny.bowl now.bowl +(height.local) ~]

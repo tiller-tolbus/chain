@@ -38,17 +38,20 @@
     |=  leader=node
     :: ~&  vote-store
     ^-  (unit qc)
+    ::  Have we received something from the leader this round,
+    ::  and is that at least as recent as what we have locally?
     %+  roll  ~(tap by vote-store)
     |=  [i=qc acc=(unit qc)]
-    ::  ~&  "checking mint"
-    ?.  =(mint.block.i leader)  acc
-    :: ~&  "checking height"
-    :: ~&  [our-height=height their-height=height.i]
-    ::  ?.  =(height height.i)  acc
-    :: ~&  "checking acc"
+    ::  Check minting node.
+    :: ?.  =(mint.block.i leader)  acc
     ?~  acc  (some i)
-    :: ~&  "checking recency"
-    ?:  (more-recent:qcu i u.acc)  (some i)  acc
+    ::  Given a leader and a vote-store, what is the latest
+    ::  vote we have from that leader?
+    ?:  ?&  (more-recent:qcu i u.acc)
+            ::  Does +.i contain a sig from the leader?
+            (~(any in quorum.i) |=(=signature =(r.signature leader)))
+        ==
+    (some i)  acc
   ::
   ++  future-blocks
     |=  =height
