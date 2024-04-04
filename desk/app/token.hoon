@@ -176,8 +176,8 @@
       ?>  =(p.cage.sign %token-block-alert)
       =/  tid  !<(@ud q.cage.sign)
       :_  this
-      :~  :*  %pass  /get-block  %arvo  %a  %keen  
-              src.bowl  
+      :~  :*  %pass  /get-block  %arvo  %g  %keen  |
+              src.bowl
               /g/x/(scot %da now.bowl)/token//block/(scot %ud tid)
           ==  ==
         %watch-ack
