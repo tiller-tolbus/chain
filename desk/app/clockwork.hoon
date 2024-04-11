@@ -14,6 +14,7 @@ $:  %0
         =height
         =block
         qc=(unit qc)   ::  quorum certificate
+        =mempool
         :: =round
         :: =step
       ==
@@ -43,11 +44,13 @@ $:  %0
     :-  clockstep-watch-card:hd
     :-  fake-pki-card:hd  pki-cards:hd
 ::
-++  on-leave  |~(* [~ this])
+++  on-leave
+  |=  =path
+  `this
 ++  on-fail
   |=  [=term =tang]
   %-  (slog leaf+"error in {<dap.bowl>}" >term< tang)
-  [~ this]
+  `this
 ++  on-save   !>(state)
 ++  on-load
   |=  old-state=vase
@@ -87,13 +90,14 @@ $:  %0
     ?-  -.action
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
+      %txn        (handle-txn +.action)
     ==
   ++  handle-start
     |=  ts=@da
     ~&  handling-start=ts
     ?.  =(*block block.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=block   [our.bowl (end 4 eny.bowl) ts height.local ~]
+    =/  init-block=block   [our.bowl ~ ts height.local ~]
     =.  block.local  init-block
     =.  qc.local  ~
     ?.  .=(src.bowl i.robin)  [~ this]
@@ -118,6 +122,10 @@ $:  %0
     ?.  (safe:as:keys p.sig msg)
       $(sigs t.sigs)
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
+  ++  handle-txn
+    |=  =txn
+    ~&  handling-txn=txn
+    `this(mempool.local (~(put to mempool.local) txn))
   --
 ++  on-peek   |=(=(pole knot) ~)
 ++  on-agent
@@ -163,14 +171,15 @@ $:  %0
       ::  that is more recent (i.e. same height, higher round OR stage)
       ::  than our local state qc. If we find one, we vote for that and update our local
       ::  block and state.
-      ::  If not, we propose our current local block.
+      ::  If not, we propose our current local block with txns from our mempool
       =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
-      =.  state  ?~  most-recent  state
-      %=  state
-        block.local  block.u.most-recent
-        qc.local     (some u.most-recent)
-      ==
+      =.  state
+        ?~  most-recent  state(txns.block.local (pick-txns-from mempool.local))
+        %=  state
+          block.local  block.u.most-recent
+          qc.local     (some u.most-recent)
+        ==
       :: :_  increment-step
       :_  this
       %-  broadcast-cards:hd
@@ -236,14 +245,15 @@ $:  %0
       ::  If all good we commit the block to history, reset local block and qc,
       ::  increment height
       ::  then broadcast the qc of the committed block to sync everyone's vote store
-      =/  init-block  [our.bowl (end 4 eny.bowl) now.bowl +(height.local) ~]
+      =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
       =.  state
       %=  state
         history
           ~&  >  ~
-          ~&  >  block-commited=[h=height.local r=round who=mint.block.i.valid noun=noun.block.i.valid]
+          ~&  >  block-commited=[h=height.local r=round who=mint.block.i.valid txns=txns.block.i.valid]
           ~&  >  ~
           (snoc history block.i.valid)
+        mempool.local  (~(dif in mempool.local) (silt txns.block.i.valid))
         height.local  +(height.local)
         block.local  init-block
         qc.local     ~
@@ -302,16 +312,17 @@ $:  %0
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-block  [our.bowl (end 4 eny.bowl) now.bowl +(height.local) ~]
+    =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
     %=  $
       history
         ~&  >  ~
-        ~&  >  block-commited=[h=height.local who=mint.block.i.valid noun=noun.block.i.valid]
+        ~&  >  block-commited=[h=height.local who=mint.block.i.valid txns=txns.block.i.valid]
         ~&  >  ~
         (snoc history block.i.valid)
-      height.local  +(height.local)
-      block.local  init-block
-      qc.local     ~
+      height.local   +(height.local)
+      block.local    init-block
+      qc.local       ~
+      mempool.local  (~(dif in mempool.local) (silt txns.block.i.valid))
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
@@ -372,4 +383,16 @@ $:  %0
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card
   [%pass /addendum %arvo %b %wait (add now.bowl ~s2)] :: TODO time this properly
+++  pick-txns-from
+  |=  =mempool
+  ^-  (list txn)
+  ::  number of transactions in a block
+  =/  needed  1.024
+  =/  count  0
+  =/  txns=(list txn)  ~
+  |-
+  ?~  mempool  txns
+  ?:  =(count needed)  txns
+  =/  new=[txn ^mempool]  ~(get to mempool)
+  $(count +(count), txns [-.new txns], mempool +.new)
 --
