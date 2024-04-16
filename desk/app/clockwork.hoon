@@ -46,11 +46,11 @@ $:  %0
 ::
 ++  on-leave
   |=  =path
-  `this
+  [~ this]
 ++  on-fail
   |=  [=term =tang]
   %-  (slog leaf+"error in {<dap.bowl>}" >term< tang)
-  `this
+  [~ this]
 ++  on-save   !>(state)
 ++  on-load
   |=  old-state=vase
@@ -125,7 +125,8 @@ $:  %0
   ++  handle-txn
     |=  =txn
     ~&  handling-txn=txn
-    `this(mempool.local (~(put to mempool.local) txn))
+    ?>  (lte (bex 10) (met 3 (jam txn)))
+    [~ this(mempool.local (~(put to mempool.local) txn))]
   --
 ++  on-peek   |=(=(pole knot) ~)
 ++  on-agent
