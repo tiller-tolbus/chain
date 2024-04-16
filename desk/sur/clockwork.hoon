@@ -4,22 +4,27 @@
 +$  action
   $%  [%start ts=@da]
       [%broadcast =qc]
+      [%txn =txn]
       :: [%vote s=signature vote]
   ==
 +$  history  (list block)
 +$  block
   $:  mint=node
-      noun=*
+      txns=(list txn)
       ts=@da
       =height
       last=quorum
   ==
++$  mempool  (set txn)
+::  for the testnet, transactions are not validated
+::  and %ledger will ignore invalid ones
++$  txn  *
 :: +$  signed-block  (pair signature block)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
 +$  height  @ud
 +$  round  @ud
-:: +$  step  $?  
+:: +$  step  $?
 ::     %new-height
 ::     %propose
 ::     %prevote
