@@ -61,7 +61,13 @@ $:  %0
     ::  prod
     ::  :-  ~  this(state !<(state-0 old-state))
 ::
-++  on-watch  |=(=(pole knot) [~ this])
+++  on-watch
+  |=  =(pole knot)
+  ?+  pole  ~|(bad-watch-path+`path`pole !!)
+      [%blocks ~]
+    :_  this
+    ~[[%give %fact ~ history+!>(history)]]
+  ==
 ++  on-poke
   |=  [=mark =vase]
   |^
@@ -261,8 +267,10 @@ $:  %0
       ==
       :: :_  increment-step
       :_  this
-      :-  addendum-card:hd
-      (broadcast-cards:hd i.valid)
+      :*  addendum-card:hd
+          block-fact-card:hd
+          (broadcast-cards:hd i.valid)
+      ==
     ==
 ++  vote-and-broadcast
   |=  [p=qc =vote]  ^-  (list card)
@@ -384,6 +392,8 @@ $:  %0
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card
   [%pass /addendum %arvo %b %wait (add now.bowl ~s2)] :: TODO time this properly
+++  block-fact-card  ^-  card
+  [%give %fact ~[/blocks] history+!>(~[(rear history)])]
 ++  pick-txns-from
   |=  =mempool
   ^-  (list txn)
