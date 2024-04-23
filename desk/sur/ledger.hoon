@@ -1,17 +1,29 @@
+/-  ch=chain
 |%
-++  addr  @ux
-++  txn-signed  [signature=@ux txn-unsigned]
-++  txn-unsigned
-  $:  who=addr
+++  txn-ledger
+  $:  signature=@
+      txn-unsigned-ledger
+  ==
+++  txn-unsigned-ledger
+  $:  who=addr:ch
       nonce=@ud
-      app=@tas
+      txn-stub-ledger
+  ==
+++  txn-stub-ledger
+  $:  app=%ledger
       ::  fees are ignored for now
       fee=@ud
       cmd=ledger-cmd
   ==
-++  balances  (map addr @ud)
+++  internal-balance
+  $:  balance=@ud
+      nonce=@ud
+      faucet=?
+  ==
+++  internal-balances  (map addr:ch internal-balance)
+++  balances  (map addr:ch @ud)
 ++  ledger-cmd
-  $%  [%send target=addr amount=@ud]
+  $%  [%send target=addr:ch amount=@ud]
       [%faucet ~]
   ==
 --

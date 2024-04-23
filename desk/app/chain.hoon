@@ -1,10 +1,10 @@
-/-  cw=clockwork
+/-  cw=clockwork, ch=chain
 /+  default-agent, dbug
 |%
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  =history:cw
++$  state-0  [=history:cw =wallets:ch]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -20,8 +20,7 @@
   =^  cards  state
     abet:init:cor
   [cards this]
-++  on-peek  peek:cor
-++  on-save  !>([state])
+++  on-save  !>(state)
 ++  on-load
   |=  =vase
   ^-  (quip card _this)
@@ -34,9 +33,19 @@
   =^  cards  state
     abet:(agent:cor wire sign)
   [cards this]
-::  TODO poke to sign and broadcast transaction
-++  on-poke   on-poke:def
-++  on-watch  on-watch:def
+++  on-watch
+  |=  =path
+  ^-  (quip card _this)
+  =^  cards  state
+    abet:(watch:cor path)
+  [cards this]
+++  on-poke
+  |=  [=mark =vase]
+  ^-  (quip card _this)
+  =^  cards  state
+    abet:(poke:cor mark vase)
+  [cards this]
+++  on-peek   on-peek:def
 ++  on-leave  on-leave:def
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
@@ -57,12 +66,13 @@
   =/  old  !<(state-0 vase)
   =.  state  old
   cor
-++  peek
+++  watch
   |=  =(pole knot)
-  ^-  (unit (unit cage))
-  ?>  ?=(^ pole)
-  ?+  pole  [~ ~]
-    [%x %v0 %history ~]  ``history+!>(history)
+  ^+  cor
+  ?+  pole  ~|(bad-watch-path+`path`pole !!)
+      [%blocks ~]
+    ?>  =(src.bowl our.bowl)
+    (give %fact ~ history+!>(history))
   ==
 ++  agent
   |=  [=(pole knot) =sign:agent:gall]
@@ -79,19 +89,77 @@
       (take-blocks !<(history:cw q.cage.sign))
     ==
   ==
+++  poke
+  |=  [=mark =vase]
+  ^+  cor
+  ?+  mark  ~|(bad-poke+mark !!)
+      %new-wallet
+    ?>  =(src.bowl our.bowl)
+    =+  !<(name=cord vase)
+    ?<  (~(has by wallets) name)
+    =/  keys  (pit:nu:crub:crypto 512 eny.bowl)
+    =.  wallets  (~(put by wallets) name [pub:ex:keys sec:ex:keys])
+    cor
+      %send-txn
+    ?>  =(src.bowl our.bowl)
+    =+  !<([name=cord =txn-stub:ch] vase)
+    =/  =wallet:ch  (~(got by wallets) name)
+    =/  keys  (nol:nu:crub:crypto sec.wallet)
+    =/  =txn-unsigned:ch
+      :*  pub.wallet
+          (nonce pub.wallet)
+          txn-stub
+      ==
+    =/  =txn-signed:ch
+      [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    %-  emil
+    %+  turn  validators
+    |=  who=ship
+    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
+  ==
 ++  take-blocks
   |=  update=history:cw
   ^+  cor
   ?~  update  cor
   ?:  (gth height.i.update (lent history))  cor
   ?:  =(height.i.update (lent history))
+    =.  cor  (give %fact ~[/blocks] history+!>(history))
     cor(history (weld history update))
   $(update t.update)
 ++  watch-blocks
-  ::  TODO subscribe to 1/3rd + 1 random nodes
-  ::  TODO if I'm a node listen to myself
   ::  TODO verify signatures on blocks
-  ::  TODO get initial state with a remote scry and only subscribe to new blocks
-  =/  who  ~zod
-  (emit %pass /blocks %agent [who %clockwork] %watch /blocks)
+  %-  emil
+  %+  turn  validators
+  |=  who=ship
+  [%pass /blocks %agent [who %clockwork] %watch /blocks]
+++  validators
+  ::  TODO subscribe to 1/3rd + 1 random validators
+  ::  TODO if I'm a validator listen to myself
+  ~[~zod]
+++  nonce
+  |=  =addr:ch
+  ^-  @ud
+  =/  next  0
+  ~+
+  |-
+  ?~  history  next
+  %=  $
+      history  t.history
+      next
+    =-  +.-
+    %^  spin  txns.i.history
+      next
+    |=  [txn=* n=@ud]
+    ^-  [* @ud]
+    ::  is it structured like a transaction?
+    ?.  ?=(txn-signed:ch txn)  [txn next]
+    ::  is it from this wallet?
+    ?.  =(who.txn addr)  [txn next]
+    ::  is it signed correctly?
+    =/  keys  (com:nu:crub:crypto addr)
+    ?.  (safe:as:keys -.txn (jam +.txn))  [txn next]
+    ::  is the nonce sequential?
+    ?.  =(nonce.txn next)  [txn next]
+    [txn +(next)]
+  ==
 --
