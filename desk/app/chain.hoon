@@ -133,9 +133,17 @@
   |=  who=ship
   [%pass /blocks %agent [who %clockwork] %watch /blocks]
 ++  validators
-  ::  TODO subscribe to 1/3rd + 1 random validators
-  ::  TODO if I'm a validator listen to myself
-  ~[~zod]
+  ^-  (list ship)
+  ?^  (find ~[our.bowl] nodes:cw)
+    ~[our.bowl]
+  =/  rng  ~(. og eny.bowl)
+  =/  vals=(list ship)  ~
+  =/  nods=(list ship)  nodes:cw
+  |-
+  ?:  (gte (lent vals) +((div (lent nods) 3)))
+    vals
+  =^  next  rng  (rads:rng (lent nods))
+  $(vals [(snag next nods) vals], nods (oust [next 1] nods))
 ++  nonce
   |=  =addr:ch
   ^-  @ud
