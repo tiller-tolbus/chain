@@ -103,7 +103,7 @@ $:  %0
     ~&  handling-start=ts
     ?.  =(*block block.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=block   [our.bowl ~ ts height.local ~]
+    =/  init-block=block   [our.bowl ~ ts height.local 0 ~]
     =.  block.local  init-block
     =.  qc.local  ~
     ?.  .=(src.bowl i.robin)  [~ this]
@@ -182,7 +182,7 @@ $:  %0
       =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
       =.  state
-        ?~  most-recent  state(txns.block.local (pick-txns-from mempool.local))
+        ?~  most-recent  state(txns.block.local (pick-txns-from mempool.local), round.block.local round)
         %=  state
           block.local  block.u.most-recent
           qc.local     (some u.most-recent)
@@ -252,7 +252,7 @@ $:  %0
       ::  If all good we commit the block to history, reset local block and qc,
       ::  increment height
       ::  then broadcast the qc of the committed block to sync everyone's vote store
-      =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
+      =/  init-block  [our.bowl ~ now.bowl +(height.local) round ~]
       =.  state
       %=  state
         history
@@ -321,7 +321,7 @@ $:  %0
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
+    =/  init-block  [our.bowl ~ now.bowl +(height.local) 0 ~]
     %=  $
       history
         ~&  >  ~

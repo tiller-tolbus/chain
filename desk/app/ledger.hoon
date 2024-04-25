@@ -55,6 +55,13 @@
   ^+  cor
   =.  internal-balances  ~
   watch-blocks
+++  peek
+  |=  =(pole knot)
+  ^-  (unit (unit cage))
+  ?>  ?=(^ pole)
+  ?+  pole  [~ ~]
+      [%balances ~]  ``balances+!>(balances)
+  ==
 ++  poke
   |=  [=mark =vase]
   ^+  cor

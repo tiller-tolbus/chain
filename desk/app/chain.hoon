@@ -1,10 +1,10 @@
-/-  cw=clockwork, ch=chain
-/+  default-agent, dbug
+/-  cw=clockwork, ch=chain, pki=pki-store
+/+  default-agent, dbug, *mip
 |%
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [=history:cw =wallets:ch]
++$  state-0  [=history:cw =pki-store:pki =wallets:ch]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -45,7 +45,7 @@
   =^  cards  state
     abet:(poke:cor mark vase)
   [cards this]
-++  on-peek   on-peek:def
+++  on-peek   peek:cor
 ++  on-leave  on-leave:def
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
@@ -59,6 +59,7 @@
 ++  init
   ^+  cor
   =.  history  ~
+  =.  cor  watch-pki
   watch-blocks
 ++  load
   |=  =vase
@@ -66,6 +67,13 @@
   =/  old  !<(state-0 vase)
   =.  state  old
   cor
+++  peek
+  |=  =(pole knot)
+  ^-  (unit (unit cage))
+  ?>  ?=(^ pole)
+  ?+  pole  [~ ~]
+      [%wallets ~]  ``wallets+!>(~(key by wallets))
+  ==
 ++  watch
   |=  =(pole knot)
   ^+  cor
@@ -87,6 +95,16 @@
       ((slog leaf+"failed subscription to blocks" u.p.sign) cor)
         %fact
       (take-blocks !<(history:cw q.cage.sign))
+    ==
+      [%pki-diffs ~]
+    ?+  -.sign  !!
+        %kick  watch-pki
+        %watch-ack
+      ?~  p.sign
+        cor
+      ((slog leaf+"failed subscription to pki" u.p.sign) cor)
+        %fact
+      (take-pki !<(pki-store:pki q.cage.sign))
     ==
   ==
 ++  poke
@@ -120,18 +138,37 @@
 ++  take-blocks
   |=  update=history:cw
   ^+  cor
+  |-
   ?~  update  cor
+  ?.  (verify-block i.update)  $(update t.update)
   ?:  (gth height.i.update (lent history))  cor
   ?:  =(height.i.update (lent history))
     =.  cor  (give %fact ~[/blocks] history+!>(history))
     cor(history (weld history update))
   $(update t.update)
+++  verify-block
+  |=  =block:cw
+  ^-  ?
+  =-  (gte (lent -) needed-validators)
+  %+  skim  ~(tap in last.block)
+  |=  =signature:cw
+  ?~  (find ~[q.signature] nodes:cw)  %.n
+  =/  vote  [block height.block round.block %2]
+  =/  key  (~(get bi pki-store) q.signature r.signature)
+  ?~  key  %.n
+  =/  keys  (com:nu:crub:crypto u.key)
+  ?~  (safe:as:keys p.signature (jam vote))  %.n
+  %.y
+++  take-pki
+  |=  p=pki-store:pki
+  cor(pki-store p)
 ++  watch-blocks
-  ::  TODO verify signatures on blocks
   %-  emil
   %+  turn  validators
   |=  who=ship
   [%pass /blocks %agent [who %clockwork] %watch /blocks]
+++  watch-pki
+  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  validators
   ^-  (list ship)
   ?^  (find ~[our.bowl] nodes:cw)
@@ -140,10 +177,18 @@
   =/  vals=(list ship)  ~
   =/  nods=(list ship)  nodes:cw
   |-
-  ?:  (gte (lent vals) +((div (lent nods) 3)))
+  ?:  (gte (lent vals) needed-validators)
     vals
   =^  next  rng  (rads:rng (lent nods))
   $(vals [(snag next nods) vals], nods (oust [next 1] nods))
+++  needed-validators  +((div (lent nodes:cw) 3))
+++  latest-key
+  |=  =ship
+  ^-  pass
+  =/  top  (~(rep in (~(key bi pki-store) ship)) max)
+  =/  key  (~(get bi pki-store) ship top)
+  ?~  key  !!
+  u.key
 ++  nonce
   |=  =addr:ch
   ^-  @ud
