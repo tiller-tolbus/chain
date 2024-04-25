@@ -1,10 +1,10 @@
-/-  cw=clockwork, lg=ledger, ch=chain
-/+  default-agent, dbug
+/-  cw=clockwork, lg=ledger, ch=chain, pki=pki-store
+/+  default-agent, dbug, *mip
 |%
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  =internal-balances:lg
++$  state-0  [=internal-balances:lg =pki-store:pki]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -38,7 +38,7 @@
   =^  cards  state
     abet:(poke:cor mark vase)
   [cards this]
-++  on-peek   on-peek:def
+++  on-peek   peek:cor
 ++  on-save   on-save:def
 ++  on-load   on-load:def
 ++  on-leave  on-leave:def
@@ -53,7 +53,7 @@
 ++  give  |=(=gift:agent:gall (emit %give gift))
 ++  init
   ^+  cor
-  =.  internal-balances  ~
+  =.  cor  watch-pki
   watch-blocks
 ++  peek
   |=  =(pole knot)
@@ -90,6 +90,16 @@
         %fact
       (take-blocks !<(history:cw q.cage.sign))
     ==
+      [%pki-diffs ~]
+    ?+  -.sign  !!
+        %kick  watch-pki
+        %watch-ack
+      ?~  p.sign
+        cor
+      ((slog leaf+"failed subscription to pki" u.p.sign) cor)
+        %fact
+      (take-pki !<(pki-store:pki q.cage.sign))
+    ==
   ==
 ++  balances
   %-  ~(urn by internal-balances)
@@ -113,7 +123,7 @@
     =/  keys  (com:nu:crub:crypto who.txn)
     ?.  (safe:as:keys -.txn (jam +.txn))  [txn br]
     ::  is the nonce sequential?
-    =/  prior  (~(gut by br) who.txn [balance=0 nonce=0 faucet=%.n])
+    =/  prior  (prior-balance br who.txn)
     ?.  =(nonce.prior nonce.txn)  [txn br]
     ::  is it for %ledger instead of another app?
     ?.  ?=(txn-ledger:lg txn)
@@ -134,9 +144,40 @@
       ::  have they already used the faucet?
       ?:  faucet.prior  [txn br]
       ::  TODO take from validators
-      [txn (~(put by br) who.txn [(add balance.prior (bex 16)) +(nonce.prior) %.y])]
+      :-  txn
+      =/  nods  node-keys
+      =/  new-balance  balance.prior
+      |-
+      ?~  nods  (~(put by br) who.txn [new-balance +(nonce.prior) %.y])
+      =/  prior-nod  (prior-balance br i.nods)
+      ?:  (lth balance.prior-nod faucet-share)
+        $(nods t.nods)
+      =/  subbed
+        (~(put by br) i.nods [(sub balance.prior-nod faucet-share) nonce.prior-nod %.y])
+      $(nods t.nods, br subbed, new-balance (add new-balance faucet-share))
     ==
   ==
+++  take-pki
+  |=  p=pki-store:pki
+  ^+  cor
+  cor(pki-store p)
 ++  watch-blocks
   (emit %pass /blocks %agent [our.bowl %chain] %watch /blocks)
+++  watch-pki
+  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
+++  latest-key
+  |=  =ship
+  ^-  pass
+  =/  top  (~(rep in (~(key bi pki-store) ship)) max)
+  =/  key  (~(get bi pki-store) ship top)
+  ?~  key  !!
+  u.key
+++  node-keys  (turn nodes:cw latest-key)
+++  faucet-amount  (bex 16)
+++  faucet-share   (div faucet-amount (lent nodes:cw))
+++  prior-balance
+  |=  [ib=internal-balances:lg =addr:ch]
+  ?~  (find ~[addr] node-keys)
+    (~(gut by ib) addr [balance=0 nonce=0 faucet=%.n])
+  (~(gut by ib) addr [balance=(bex 64) nonce=0 faucet=%.y])
 --

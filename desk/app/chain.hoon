@@ -58,7 +58,6 @@
 ++  give  |=(=gift:agent:gall (emit %give gift))
 ++  init
   ^+  cor
-  =.  history  ~
   =.  cor  watch-pki
   watch-blocks
 ++  load
