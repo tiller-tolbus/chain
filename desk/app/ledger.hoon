@@ -54,7 +54,7 @@
 ++  init
   ^+  cor
   =.  cor  watch-pki
-  watch-blocks
+  watch-blocs
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
@@ -80,15 +80,15 @@
   |=  [=(pole knot) =sign:agent:gall]
   ^+  cor
   ?+  pole  ~|(bad-agent-wire+pole !!)
-      [%blocks ~]
+      [%blocs ~]
     ?+  -.sign  !!
-        %kick  watch-blocks
+        %kick  watch-blocs
         %watch-ack
       ?~  p.sign
         cor
-      ((slog leaf+"failed subscription to blocks" u.p.sign) cor)
+      ((slog leaf+"failed subscription to blocs" u.p.sign) cor)
         %fact
-      (take-blocks !<(history:cw q.cage.sign))
+      (take-blocs !<(history:cw q.cage.sign))
     ==
       [%pki-diffs ~]
     ?+  -.sign  !!
@@ -105,15 +105,17 @@
   %-  ~(urn by internal-balances)
   |=  [k=@ v=[balance=@ud nonce=@ud faucet=?]]
   balance.v
-++  take-blocks
+++  take-blocs
   |=  =history:cw
   ^+  cor
-  ?~  history  (give %fact ~ balances+!>(balances))
+  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw history)
+  |-
+  ?~  his  (give %fact ~ balances+!>(balances))
   %=  $
-      history  t.history
+      his  t.his
       internal-balances
     =-  +.-
-    %^  spin  txns.i.history
+    %^  spin  txns.bloc.i.his
       internal-balances
     |=  [txn=* br=(map addr:ch [balance=@ud nonce=@ud faucet=?])]
     ^-  [* (map @ux [@ud @ud ?])]
@@ -140,29 +142,14 @@
       :-  txn
       %+  ~(put by deducted)  target.cmd
       [(add balance.target-prior amount.cmd) nonce.target-prior faucet.target-prior]
-        [%faucet ~]
-      ::  have they already used the faucet?
-      ?:  faucet.prior  [txn br]
-      ::  TODO take from validators
-      :-  txn
-      =/  nods  node-keys
-      =/  new-balance  balance.prior
-      |-
-      ?~  nods  (~(put by br) who.txn [new-balance +(nonce.prior) %.y])
-      =/  prior-nod  (prior-balance br i.nods)
-      ?:  (lth balance.prior-nod faucet-share)
-        $(nods t.nods)
-      =/  subbed
-        (~(put by br) i.nods [(sub balance.prior-nod faucet-share) nonce.prior-nod %.y])
-      $(nods t.nods, br subbed, new-balance (add new-balance faucet-share))
     ==
   ==
 ++  take-pki
   |=  p=pki-store:pki
   ^+  cor
   cor(pki-store p)
-++  watch-blocks
-  (emit %pass /blocks %agent [our.bowl %chain] %watch /blocks)
+++  watch-blocs
+  (emit %pass /blocs %agent [our.bowl %chain] %watch /blocs)
 ++  watch-pki
   (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  latest-key

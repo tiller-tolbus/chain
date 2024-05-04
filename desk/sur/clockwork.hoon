@@ -1,4 +1,4 @@
-:: types
+/+  *mip
 |%
 +$  signature  [p=@uvH q=ship r=life]
 +$  action
@@ -7,8 +7,13 @@
       [%txn =txn]
       :: [%vote s=signature vote]
   ==
-+$  history  (list block)
-+$  block
++$  voted-bloc
+  $:  =bloc
+      =quorum
+  ==
++$  history  ((mop @ud voted-bloc) lth)
+++  hon  ((on @ud voted-bloc) lth)
++$  bloc
   $:  mint=node
       txns=(list txn)
       ts=@da
@@ -16,11 +21,12 @@
       =round
       last=quorum
   ==
-+$  mempool  (set txn)
+::  address to nonce to transaction
++$  mempool  (mip @ux @ud txn)
 ::  for the testnet, transactions are not validated
 ::  and %ledger will ignore invalid ones
 +$  txn  *
-:: +$  signed-block  (pair signature block)
+:: +$  signed-bloc  (pair signature bloc)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
 +$  height  @ud
@@ -37,7 +43,7 @@
 ++  delta  ~s3  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
-  $:  =block
+  $:  =bloc
       referendum
   ==
 :: +$  raw-signed-vote  @

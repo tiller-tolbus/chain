@@ -24,6 +24,5 @@
 ++  balances  (map addr:ch @ud)
 ++  ledger-cmd
   $%  [%send target=addr:ch amount=@ud]
-      [%faucet ~]
   ==
 --

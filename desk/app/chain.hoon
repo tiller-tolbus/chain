@@ -1,10 +1,10 @@
-/-  cw=clockwork, ch=chain, pki=pki-store
+/-  cw=clockwork, ch=chain, lg=ledger, pki=pki-store
 /+  default-agent, dbug, *mip
 |%
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [=history:cw =pki-store:pki =wallets:ch]
++$  state-0  [=history:cw =pki-store:pki =wallets:ch =sent-txns:ch]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -59,7 +59,7 @@
 ++  init
   ^+  cor
   =.  cor  watch-pki
-  watch-blocks
+  watch-blocs
 ++  load
   |=  =vase
   ^+  cor
@@ -72,12 +72,34 @@
   ?>  ?=(^ pole)
   ?+  pole  [~ ~]
       [%wallets ~]  ``wallets+!>(~(key by wallets))
+      [%transactions addr=@ ~]
+    =-  ``transactions+!>(~(tap in -))
+    ^-  (set txn-signed:ch)
+    =/  nonces  (~(key bi sent-txns) addr.pole)
+    %-  ~(run in nonces)
+    |=  nonce=@ud
+    (~(got bi sent-txns) addr.pole nonce)
+      [%transactions addr=@ %pending ~]
+    =/  wallet-txns
+      =-  ~(tap in -)
+      ^-  (set txn-signed:ch)
+      =/  nonces  (~(key bi sent-txns) addr.pole)
+      %-  ~(run in nonces)
+      |=  nonce=@ud
+      (~(got bi sent-txns) addr.pole nonce)
+    =/  com  (committed-nonce addr.pole)
+    =-  ``transactions+!>(-)
+    %+  skim  wallet-txns
+    |=  =txn-signed:ch
+    (gte nonce.txn-signed com)
+      [%balances ~]
+    ``balances+!>(.^(balances:lg %gx /(scot %p our.bowl)/ledger/(scot %da now.bowl)/balances/noun))
   ==
 ++  watch
   |=  =(pole knot)
   ^+  cor
   ?+  pole  ~|(bad-watch-path+`path`pole !!)
-      [%blocks ~]
+      [%blocs ~]
     ?>  =(src.bowl our.bowl)
     (give %fact ~ history+!>(history))
   ==
@@ -85,15 +107,15 @@
   |=  [=(pole knot) =sign:agent:gall]
   ^+  cor
   ?+  pole  ~|(bad-agent-wire+pole !!)
-      [%blocks ~]
+      [%blocs ~]
     ?+  -.sign  !!
-        %kick  watch-blocks
+        %kick  watch-blocs
         %watch-ack
       ?~  p.sign
         cor
-      ((slog leaf+"failed subscription to blocks" u.p.sign) cor)
+      ((slog leaf+"failed subscription to blocs" u.p.sign) cor)
         %fact
-      (take-blocks !<(history:cw q.cage.sign))
+      (take-blocs !<(history:cw q.cage.sign))
     ==
       [%pki-diffs ~]
     ?+  -.sign  !!
@@ -117,6 +139,24 @@
     =/  keys  (pit:nu:crub:crypto 512 eny.bowl)
     =.  wallets  (~(put by wallets) name [pub:ex:keys sec:ex:keys])
     cor
+      %send-tokens
+    ::  convenience poke for %ledger %send transactions
+    ?>  =(src.bowl our.bowl)
+    =+  !<([name=cord target=addr:ch amount=@ud] vase)
+    =/  =wallet:ch  (~(got by wallets) name)
+    =/  keys  (nol:nu:crub:crypto sec.wallet)
+    =/  =txn-unsigned:ch
+      :*  pub.wallet
+          (nonce pub.wallet)
+          [%ledger 0 [%send target amount]]
+      ==
+    =/  =txn-signed:ch
+      [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    =.  sent-txns  (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn-signed)
+    %-  emil
+    %+  turn  validators
+    |=  who=ship
+    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
       %send-txn
     ?>  =(src.bowl our.bowl)
     =+  !<([name=cord =txn-stub:ch] vase)
@@ -129,30 +169,27 @@
       ==
     =/  =txn-signed:ch
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    =.  sent-txns  (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn-signed)
     %-  emil
     %+  turn  validators
     |=  who=ship
     [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
   ==
-++  take-blocks
+++  take-blocs
   |=  update=history:cw
   ^+  cor
-  |-
   ?~  update  cor
-  ?.  (verify-block i.update)  $(update t.update)
-  ?:  (gth height.i.update (lent history))  cor
-  ?:  =(height.i.update (lent history))
-    =.  cor  (give %fact ~[/blocks] history+!>(history))
-    cor(history (weld history update))
-  $(update t.update)
-++  verify-block
-  |=  =block:cw
+  ?.  (all:hon:cw update verify-bloc)  cor
+  =.  history  (uni:hon:cw history update)
+  cor
+++  verify-bloc
+  |=  [height=@ud =bloc:cw =quorum:cw]
   ^-  ?
   =-  (gte (lent -) needed-validators)
-  %+  skim  ~(tap in last.block)
+  %+  skim  ~(tap in quorum)
   |=  =signature:cw
   ?~  (find ~[q.signature] nodes:cw)  %.n
-  =/  vote  [block height.block round.block %2]
+  =/  vote  [bloc height.bloc round.bloc %2]
   =/  key  (~(get bi pki-store) q.signature r.signature)
   ?~  key  %.n
   =/  keys  (com:nu:crub:crypto u.key)
@@ -160,19 +197,23 @@
   %.y
 ++  take-pki
   |=  p=pki-store:pki
+  ^+  cor
   cor(pki-store p)
-++  watch-blocks
+++  watch-blocs
   %-  emil
   %+  turn  validators
   |=  who=ship
-  [%pass /blocks %agent [who %clockwork] %watch /blocks]
+  [%pass /blocs %agent [who %clockwork] %watch /blocs]
 ++  watch-pki
   (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  validators
   ^-  (list ship)
+  ~+
   ?^  (find ~[our.bowl] nodes:cw)
     ~[our.bowl]
-  =/  rng  ~(. og eny.bowl)
+  ::  seed with @p to broadcast txns to the same validators every time
+  ::  otherwise it may be possible to send nonces out of order
+  =/  rng  ~(. og our.bowl)
   =/  vals=(list ship)  ~
   =/  nods=(list ship)  nodes:cw
   |-
@@ -190,16 +231,22 @@
   u.key
 ++  nonce
   |=  =addr:ch
+  =/  nonces  (~(key bi sent-txns) addr)
+  ?~  nonces  0
+  (~(rep in `(set @ud)`nonces) max)
+++  committed-nonce
+  |=  =addr:ch
   ^-  @ud
   =/  next  0
   ~+
+  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw history)
   |-
-  ?~  history  next
+  ?~  his  next
   %=  $
-      history  t.history
+      his  t.his
       next
     =-  +.-
-    %^  spin  txns.i.history
+    %^  spin  txns.bloc.i.his
       next
     |=  [txn=* n=@ud]
     ^-  [* @ud]
