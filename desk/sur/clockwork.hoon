@@ -5,6 +5,7 @@
   $%  [%start ts=@da]
       [%broadcast =qc]
       [%txn =txn]
+      [%faucet =addr]
       :: [%vote s=signature vote]
   ==
 +$  voted-bloc
@@ -59,6 +60,7 @@
     ~bud
     ~wes
 ==
+++  addr  @ux
 ::  functions
 :: ++  quorum
 ::   |%

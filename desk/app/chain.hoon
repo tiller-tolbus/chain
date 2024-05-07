@@ -174,6 +174,11 @@
     %+  turn  validators
     |=  who=ship
     [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
+      %ask-faucet
+    ?>  =(src.bowl our.bowl)
+    =+  !<(name=cord vase)
+    =/  =wallet:ch  (~(got by wallets) name)
+    (emit %pass /ask-faucet %agent [~zod %clockwork] %poke noun+!>([%faucet wallet]))
   ==
 ++  take-blocs
   |=  update=history:cw

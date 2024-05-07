@@ -26,6 +26,7 @@ $:  %0
     our-life=@ud
     keys=acru:ames
     =pki-store:pki
+    faucet-nonce=@ud
 ==
 +$  card  card:agent:gall
 --
@@ -97,6 +98,7 @@ $:  %0
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
       %txn        (handle-txn +.action)
+      %faucet     (handle-faucet +.action)
     ==
   ++  handle-start
     |=  ts=@da
@@ -134,6 +136,17 @@ $:  %0
     ?>  (lte (bex 10) (met 3 (jam txn)))
     ?.  ?=(txn-signed:ch txn)  [~ this]
     [~ this(mempool.local (~(put bi mempool.local) who.txn nonce.txn txn))]
+  ++  handle-faucet
+    |=  =addr
+    =/  txn-unsigned
+      :*  (latest-key our.bowl)
+          faucet-nonce
+          %ledger
+          0
+          [%send addr (bex 16)]
+      ==
+    =.  faucet-nonce  +(faucet-nonce)
+    (handle-txn [(sigh:as:keys (jam txn-unsigned)) txn-unsigned])
   --
 ++  on-peek   |=(=(pole knot) ~)
 ++  on-agent
@@ -432,4 +445,11 @@ $:  %0
   ?~  txns  mempool
   ?.  ?=(txn-signed:ch i.txns)  $(txns t.txns)
   $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)
+++  latest-key
+  |=  =ship
+  ^-  pass
+  =/  top  (~(rep in (~(key bi pki-store) ship)) max)
+  =/  key  (~(get bi pki-store) ship top)
+  ?~  key  !!
+  u.key
 --
