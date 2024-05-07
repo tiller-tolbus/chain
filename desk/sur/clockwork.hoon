@@ -14,6 +14,7 @@
   ==
 +$  history  ((mop @ud voted-bloc) lth)
 ++  hon  ((on @ud voted-bloc) lth)
+::  named to avoid conflict with stdlib block
 +$  bloc
   $:  mint=node
       txns=(list txn)
@@ -39,9 +40,10 @@
 ::     %precommit
 ::     %commit
 ::   ==
-+$  step  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
+::  named to avoid conflict with stdlib step
++$  steppe  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
-++  delta  ~s3  :: time between steps
+++  delta  ~s2  :: time between steps
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  =bloc

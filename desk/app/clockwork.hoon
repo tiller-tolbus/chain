@@ -15,8 +15,6 @@ $:  %0
         =bloc
         qc=(unit qc)   ::  quorum certificate
         =mempool
-        :: =round
-        :: =step
       ==
                        ::  global state, this should sync among nodes
     robin=(lest node)  ::  node order, round-robin
@@ -56,11 +54,11 @@ $:  %0
 ++  on-load
   |=  old-state=vase
     ::  dev
-  :_  this(robin nodes)
-    :-  clockstep-watch-card:hd
-    :-  fake-pki-card:hd  pki-cards:hd
+    ::  :_  this(robin nodes)
+    ::    :-  clockstep-watch-card:hd
+    ::    :-  fake-pki-card:hd  pki-cards:hd
     ::  prod
-    ::  :-  ~  this(state !<(state-0 old-state))
+    :-  ~  this(state !<(state-0 old-state))
 ::
 ++  on-watch
   |=  =(pole knot)
@@ -177,13 +175,16 @@ $:  %0
   ::  Main agent logic
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
-    =/  [=round rem=@]  (dvr (dec count) 4)
-    =/  =step  (step +(rem))
+    =/  [=round rem=@]
+      ::  ?:  =(count 0)
+      ::    [0 0]
+      (dvr (dec count) 4)
+    =/  =steppe  (steppe +(rem))
     =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
-    ~&  >>>  timer-pinged-at=[count=count height=height.local round=round step=step]
+    ~&  >>>  timer-pinged-at=[count=count height=height.local round=round steppe=steppe]
     ~&  >  current-time=[m s f]:(yell now.bowl)
     ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
-    ?+  step  [~ this]
+    ?-  steppe
         %1
       ~&  >>  leader=leader
       ::  In step 1 only the leader votes
@@ -275,10 +276,10 @@ $:  %0
       %=  state
         history
           ~&  >  ~
-          ~&  >  bloc-commited=[h=height.local r=round who=mint.bloc.i.valid txns=txns.bloc.i.valid]
+          ~&  >  bloc-commited=[h=height.bloc.i.valid r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
           ~&  >  ~
         %^  put:hon  history
-          ~(wyt by history)
+          height.bloc.i.valid
         `voted-bloc`[bloc.i.valid quorum.i.valid]
         mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
         height.local  +(height.local)
@@ -345,10 +346,10 @@ $:  %0
     %=  $
       history
         ~&  >  ~
-        ~&  >  bloc-commited=[h=height.local who=mint.bloc.i.valid txns=txns.bloc.i.valid]
+        ~&  >  bloc-commited=[h=height.bloc.i.valid r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
         ~&  >  ~
         %^  put:hon  history
-          ~(wyt by history)
+          height.bloc.i.valid
         [bloc.i.valid quorum.i.valid]
       height.local   +(height.local)
       ::  bloc.local    init-bloc
@@ -415,9 +416,11 @@ $:  %0
 ++  addendum-card  ^-  card
   [%pass /addendum %arvo %b %wait (add now.bowl ~s2)] :: TODO time this properly
 ++  bloc-fact-card  ^-  card
-  :*  %give  %fact  ~[/blocs]  %history
-      !>((lot:hon history `(sub ~(wyt by history) 1) ~))
-  ==
+  =/  update
+    ::  ?:  (lth ~(wyt by history) 2)
+      history
+    ::  (lot:hon history `(sub ~(wyt by history) 2) `~(wyt by history))
+  [%give %fact ~[/blocs] history+!>(update)]
 ++  pick-txns-from
   |=  =mempool
   ^-  (list txn)

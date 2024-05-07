@@ -198,8 +198,7 @@
   =/  key  (~(get bi pki-store) q.signature r.signature)
   ?~  key  %.n
   =/  keys  (com:nu:crub:crypto u.key)
-  ?~  (safe:as:keys p.signature (jam vote))  %.n
-  %.y
+  (safe:as:keys p.signature (jam vote))
 ++  take-pki
   |=  p=pki-store:pki
   ^+  cor
