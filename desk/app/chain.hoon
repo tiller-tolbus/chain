@@ -71,15 +71,18 @@
   ^-  (unit (unit cage))
   ?>  ?=(^ pole)
   ?+  pole  [~ ~]
-      [%wallets ~]  ``wallets+!>(~(key by wallets))
-      [%transactions addr=@ ~]
+      [%x %wallets ~]
+    ``wallets+!>(~(key by wallets))
+      [%x %balances ~]
+    ``balances+!>(.^(balances:lg %gx /(scot %p our.bowl)/ledger/(scot %da now.bowl)/balances/noun))
+      [%x %transactions addr=@ ~]
     =-  ``transactions+!>(~(tap in -))
     ^-  (set txn-signed:ch)
     =/  nonces  (~(key bi sent-txns) addr.pole)
     %-  ~(run in nonces)
     |=  nonce=@ud
     (~(got bi sent-txns) addr.pole nonce)
-      [%transactions addr=@ %pending ~]
+      [%x %transactions addr=@ %pending ~]
     =/  wallet-txns
       =-  ~(tap in -)
       ^-  (set txn-signed:ch)
@@ -92,8 +95,6 @@
     %+  skim  wallet-txns
     |=  =txn-signed:ch
     (gte nonce.txn-signed com)
-      [%balances ~]
-    ``balances+!>(.^(balances:lg %gx /(scot %p our.bowl)/ledger/(scot %da now.bowl)/balances/noun))
   ==
 ++  watch
   |=  =(pole knot)
@@ -126,6 +127,13 @@
       ((slog leaf+"failed subscription to pki" u.p.sign) cor)
         %fact
       (take-pki !<(pki-store:pki q.cage.sign))
+    ==
+      [%ask-faucet ~]
+    ?+  -.sign  !!
+        %poke-ack
+      ?~  p.sign
+        cor
+      ((slog leaf+"failed faucet" u.p.sign) cor)
     ==
   ==
 ++  poke
@@ -178,7 +186,7 @@
     ?>  =(src.bowl our.bowl)
     =+  !<(name=cord vase)
     =/  =wallet:ch  (~(got by wallets) name)
-    (emit %pass /ask-faucet %agent [leader:cw %clockwork] %poke noun+!>([%faucet wallet]))
+    (emit %pass /ask-faucet %agent [primary:cw %clockwork] %poke noun+!>([%faucet pub.wallet]))
   ==
 ++  take-update
   |=  update=bloc-update:cw
@@ -193,7 +201,7 @@
   ==
 ++  take-reset
   ^+  cor
-  ?>  =(src.bowl leader:cw)
+  ?>  =(src.bowl primary:cw)
   =.  history  ~
   =.  sent-txns  ~
   cor
@@ -224,11 +232,11 @@
   ^-  (list ship)
   ~+
   ?^  (find ~[our.bowl] nodes:cw)
-    ~[our.bowl leader:cw]
+    ~[our.bowl primary:cw]
   ::  seed with @p to broadcast txns to the same validators every time
   ::  otherwise it may be possible to send nonces out of order
   =/  rng  ~(. og our.bowl)
-  =/  vals=(list ship)  ~[leader:cw]
+  =/  vals=(list ship)  ~[primary:cw]
   =/  nods=(list ship)  nodes:cw
   |-
   ?:  (gte (lent vals) needed-validators)

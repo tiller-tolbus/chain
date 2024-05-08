@@ -84,7 +84,7 @@ $:  %0
     ?:  ?=(%nuke q.vase)
       ~&  >>>  "nuking state"
       ~&  >>  history=history
-      ?>  =(src.bowl leader:cw)
+      ?>  =(src.bowl primary)
       =.  state  *state-0
       :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
     ::  TODO pause poke?
@@ -131,8 +131,7 @@ $:  %0
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   ++  handle-txn
     |=  =txn
-    ~&  handling-txn=txn
-    ?>  (lte (bex 10) (met 3 (jam txn)))
+    ?>  (gte (bex 10) (met 3 (jam txn)))
     ?.  ?=(txn-signed:ch txn)  [~ this]
     [~ this(mempool.local (~(put bi mempool.local) who.txn nonce.txn txn))]
   ++  handle-faucet
@@ -144,6 +143,8 @@ $:  %0
           0
           [%send addr (bex 16)]
       ==
+    ~&  >>  txn-unsigned
+    ~&  >>  [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
     =.  faucet-nonce  +(faucet-nonce)
     (handle-txn [(sigh:as:keys (jam txn-unsigned)) txn-unsigned])
   --

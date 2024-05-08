@@ -60,7 +60,7 @@
   ^-  (unit (unit cage))
   ?>  ?=(^ pole)
   ?+  pole  [~ ~]
-      [%balances ~]  ``balances+!>(balances)
+      [%x %balances ~]  ``balances+!>(balances)
   ==
 ++  poke
   |=  [=mark =vase]

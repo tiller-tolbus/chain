@@ -67,7 +67,7 @@
     ~bud
     ~wes
 ==
-++  leader  ~zod
+++  primary  ~zod
 +$  addr  @ux
 ::  functions
 :: ++  quorum

@@ -3,10 +3,10 @@
 ++  grad  %noun
 ++  grow
   |%
-  ++  noun  balances:lg
+  ++  noun  balances
   --
 ++  grab
   |%
-  ++  noun  balances
+  ++  noun  balances:lg
   --
 --
