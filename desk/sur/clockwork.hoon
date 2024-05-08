@@ -14,6 +14,11 @@
   ==
 +$  history  ((mop @ud voted-bloc) lth)
 ++  hon  ((on @ud voted-bloc) lth)
++$  bloc-update
+  $%  [%blocs =history]
+      [%reset =reset-id]
+  ==
++$  reset-id  @
 ::  named to avoid conflict with stdlib block
 +$  bloc
   $:  mint=node
@@ -62,7 +67,8 @@
     ~bud
     ~wes
 ==
-++  addr  @ux
+++  leader  ~zod
++$  addr  @ux
 ::  functions
 :: ++  quorum
 ::   |%

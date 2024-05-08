@@ -65,7 +65,7 @@ $:  %0
   ?+  pole  ~|(bad-watch-path+`path`pole !!)
       [%blocs ~]
     :_  this
-    ~[[%give %fact ~ history+!>(history)]]
+    ~[[%give %fact ~ bloc-update+!>([%blocs history])]]
   ==
 ++  on-poke
   |=  [=mark =vase]
@@ -84,6 +84,7 @@ $:  %0
     ?:  ?=(%nuke q.vase)
       ~&  >>>  "nuking state"
       ~&  >>  history=history
+      ?>  =(src.bowl leader:cw)
       =.  state  *state-0
       :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
     ::  TODO pause poke?
@@ -411,6 +412,7 @@ $:  %0
 ++  stop-card
   [%pass /wire %agent [our.bowl %clockstep] %poke [%noun !>(%stop)]]
 ++  nuke-cards
+  :-  [%give %fact ~[/blocs] bloc-update+!>([%reset ~])]
   %+  turn  nodes  |=  sip=@p
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card
@@ -420,7 +422,7 @@ $:  %0
     ::  ?:  (lth ~(wyt by history) 2)
       history
     ::  (lot:hon history `(sub ~(wyt by history) 2) `~(wyt by history))
-  [%give %fact ~[/blocs] history+!>(update)]
+  [%give %fact ~[/blocs] bloc-update+!>([%blocs update])]
 ++  pick-txns-from
   |=  =mempool
   ^-  (list txn)

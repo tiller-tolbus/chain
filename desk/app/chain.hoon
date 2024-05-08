@@ -115,7 +115,7 @@
         cor
       ((slog leaf+"failed subscription to blocs" u.p.sign) cor)
         %fact
-      (take-blocs !<(history:cw q.cage.sign))
+      (take-update !<(bloc-update:cw q.cage.sign))
     ==
       [%pki-diffs ~]
     ?+  -.sign  !!
@@ -178,14 +178,24 @@
     ?>  =(src.bowl our.bowl)
     =+  !<(name=cord vase)
     =/  =wallet:ch  (~(got by wallets) name)
-    (emit %pass /ask-faucet %agent [~zod %clockwork] %poke noun+!>([%faucet wallet]))
+    (emit %pass /ask-faucet %agent [leader:cw %clockwork] %poke noun+!>([%faucet wallet]))
   ==
-++  take-blocs
-  |=  update=history:cw
+++  take-update
+  |=  update=bloc-update:cw
   ^+  cor
-  ?~  update  cor
-  ?.  (all:hon:cw update verify-bloc)  cor
-  =.  history  (uni:hon:cw history update)
+  ?-  -.update
+      %reset
+    take-reset
+      %blocs
+    ?.  (all:hon:cw history.update verify-bloc)  cor
+    =.  history  (uni:hon:cw history history.update)
+    cor
+  ==
+++  take-reset
+  ^+  cor
+  ?>  =(src.bowl leader:cw)
+  =.  history  ~
+  =.  sent-txns  ~
   cor
 ++  verify-bloc
   |=  [height=@ud =bloc:cw =quorum:cw]
@@ -214,11 +224,11 @@
   ^-  (list ship)
   ~+
   ?^  (find ~[our.bowl] nodes:cw)
-    ~[our.bowl]
+    ~[our.bowl leader:cw]
   ::  seed with @p to broadcast txns to the same validators every time
   ::  otherwise it may be possible to send nonces out of order
   =/  rng  ~(. og our.bowl)
-  =/  vals=(list ship)  ~
+  =/  vals=(list ship)  ~[leader:cw]
   =/  nods=(list ship)  nodes:cw
   |-
   ?:  (gte (lent vals) needed-validators)
