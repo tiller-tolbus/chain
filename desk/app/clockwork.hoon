@@ -136,17 +136,17 @@ $:  %0
     [~ this(mempool.local (~(put bi mempool.local) who.txn nonce.txn txn))]
   ++  handle-faucet
     |=  =addr
-    =/  txn-unsigned
+    =/  =txn-unsigned:ch
       :*  (latest-key our.bowl)
           faucet-nonce
           %ledger
           0
           [%send addr (bex 16)]
       ==
-    ~&  >>  txn-unsigned
-    ~&  >>  [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    =/  =txn-signed:ch  [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    ~&  >>>  [txn-signed]
     =.  faucet-nonce  +(faucet-nonce)
-    (handle-txn [(sigh:as:keys (jam txn-unsigned)) txn-unsigned])
+    (handle-txn txn-signed)
   --
 ++  on-peek   |=(=(pole knot) ~)
 ++  on-agent
@@ -448,6 +448,7 @@ $:  %0
 ++  trim-mempool
   |=  [=mempool txns=(list txn)]
   ^-  ^mempool
+  ~&  >  txns
   ?~  txns  mempool
   ?.  ?=(txn-signed:ch i.txns)  $(txns t.txns)
   $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)

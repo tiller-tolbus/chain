@@ -102,7 +102,7 @@
   ?+  pole  ~|(bad-watch-path+`path`pole !!)
       [%blocs ~]
     ?>  =(src.bowl our.bowl)
-    (give %fact ~ history+!>(history))
+    (give %fact ~ bloc-update+!>([%blocs history]))
   ==
 ++  agent
   |=  [=(pole knot) =sign:agent:gall]
@@ -197,14 +197,14 @@
       %blocs
     ?.  (all:hon:cw history.update verify-bloc)  cor
     =.  history  (uni:hon:cw history history.update)
-    cor
+    (give %fact ~[/blocs] bloc-update+!>([%blocs history.update]))
   ==
 ++  take-reset
   ^+  cor
   ?>  =(src.bowl primary:cw)
   =.  history  ~
   =.  sent-txns  ~
-  cor
+  (give %fact ~[/blocs] bloc-update+!>([%reset ~]))
 ++  verify-bloc
   |=  [height=@ud =bloc:cw =quorum:cw]
   ^-  ?
@@ -221,13 +221,13 @@
   |=  p=pki-store:pki
   ^+  cor
   cor(pki-store p)
+++  watch-pki
+  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  watch-blocs
   %-  emil
   %+  turn  validators
   |=  who=ship
   [%pass /blocs %agent [who %clockwork] %watch /blocs]
-++  watch-pki
-  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  validators
   ^-  (list ship)
   ~+

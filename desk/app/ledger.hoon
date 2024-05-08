@@ -4,7 +4,7 @@
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [=internal-balances:lg =pki-store:pki]
++$  state-0  [=history:cw =pki-store:pki]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -39,8 +39,13 @@
     abet:(poke:cor mark vase)
   [cards this]
 ++  on-peek   peek:cor
-++  on-save   on-save:def
-++  on-load   on-load:def
+++  on-save  !>(state)
+++  on-load
+  |=  =vase
+  ^-  (quip card _this)
+  =^  cards  state
+    abet:(load:cor vase)
+  [cards this]
 ++  on-leave  on-leave:def
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
@@ -55,12 +60,18 @@
   ^+  cor
   =.  cor  watch-pki
   watch-blocs
+++  load
+  |=  =vase
+  ^+  cor
+  =/  old  !<(state-0 vase)
+  =.  state  old
+  cor
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?>  ?=(^ pole)
   ?+  pole  [~ ~]
-      [%x %balances ~]  ``balances+!>(balances)
+      [%x %balances ~]  ``balances+!>((balance-from-history history ~))
   ==
 ++  poke
   |=  [=mark =vase]
@@ -88,7 +99,7 @@
         cor
       ((slog leaf+"failed subscription to blocs" u.p.sign) cor)
         %fact
-      (take-blocs !<(history:cw q.cage.sign))
+      (take-update !<(bloc-update:cw q.cage.sign))
     ==
       [%pki-diffs ~]
     ?+  -.sign  !!
@@ -102,38 +113,63 @@
     ==
   ==
 ++  balances
+  |=  =internal-balances:lg
   %-  ~(urn by internal-balances)
   |=  [k=@ v=[balance=@ud nonce=@ud faucet=?]]
   balance.v
-++  take-blocs
-  |=  =history:cw
+++  take-update
+  |=  update=bloc-update:cw
   ^+  cor
-  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw history)
+    ?-  -.update
+      %reset
+    take-reset
+      %blocs
+    =.  history  (uni:hon:cw history history.update)
+    (give %fact ~[/balances] balances+!>((balance-from-history history history.update)))
+  ==
+++  take-reset
+  ^+  cor
+  =.  history  ~
+  cor
+++  balance-from-history
+  |=  [old=history:cw new=history:cw]
+  ^-  balances:lg
+  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw (uni:hon:cw old new))
+  =/  =internal-balances:lg  ~
   |-
-  ?~  his  (give %fact ~ balances+!>(balances))
+  ~+
+  ?~  his  (balances internal-balances)
   %=  $
       his  t.his
       internal-balances
     =-  +.-
+    ~&  txns.bloc.i.his
     %^  spin  txns.bloc.i.his
       internal-balances
     |=  [txn=* br=(map addr:ch [balance=@ud nonce=@ud faucet=?])]
     ^-  [* (map @ux [@ud @ud ?])]
     ::  is it structured like a transaction?
+    ~&  >  'is it structured like a transaction?'
+    ~&  >>  -.txn
+    ~&  >>  +.txn
     ?.  ?=(txn-signed:ch txn)  [txn br]
     ::  is it signed correctly?
+    ~&  >  'is it signed correctly?'
     =/  keys  (com:nu:crub:crypto who.txn)
     ?.  (safe:as:keys -.txn (jam +.txn))  [txn br]
     ::  is the nonce sequential?
+    ~&  >  'is the nonce sequential?'
     =/  prior  (prior-balance br who.txn)
     ?.  =(nonce.prior nonce.txn)  [txn br]
     ::  is it for %ledger instead of another app?
+    ~&  >  'is it for %ledger instead of another app?'
     ?.  ?=(txn-ledger:lg txn)
       [txn (~(put by br) who.txn [balance.prior +(nonce.prior) faucet.prior])]
     =/  cmd=ledger-cmd:lg  cmd.txn
     ?-  cmd
         [%send target=@ amount=@]
       ::  do they have the tokens they want to send?
+      ~&  >  'do they have the tokens they want to send?'
       ?:  (gth amount.cmd balance.prior)  [txn br]
       =/  deducted
         %+  ~(put by br)  who.txn
@@ -148,10 +184,11 @@
   |=  p=pki-store:pki
   ^+  cor
   cor(pki-store p)
-++  watch-blocs
-  (emit %pass /blocs %agent [our.bowl %chain] %watch /blocs)
 ++  watch-pki
   (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
+++  watch-blocs
+  (emit %pass /blocs %agent [our.bowl %chain] %watch /blocs)
+++  node-keys  (turn nodes:cw latest-key)
 ++  latest-key
   |=  =ship
   ^-  pass
@@ -159,9 +196,6 @@
   =/  key  (~(get bi pki-store) ship top)
   ?~  key  !!
   u.key
-++  node-keys  (turn nodes:cw latest-key)
-++  faucet-amount  (bex 16)
-++  faucet-share   (div faucet-amount (lent nodes:cw))
 ++  prior-balance
   |=  [ib=internal-balances:lg =addr:ch]
   ?~  (find ~[addr] node-keys)
