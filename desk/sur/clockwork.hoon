@@ -32,7 +32,7 @@
 +$  mempool  (mip @ux @ud txn)
 ::  for the testnet, transactions are not validated
 ::  and %ledger will ignore invalid ones
-+$  txn  *
++$  txn  ^
 :: +$  signed-bloc  (pair signature bloc)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p

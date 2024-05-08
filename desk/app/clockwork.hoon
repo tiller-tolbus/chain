@@ -440,11 +440,15 @@ $:  %0
     -:~(get to addrs)
   =/  nonces
     (scag (sub needed count) (sort ~(tap in (~(key bi `^mempool`mempool) addr)) lth))
-  =/  new-txns
+  =/  new-txns=(list txn)
     %+  turn  nonces
     |=  nonce=@ud
     (~(got bi `^mempool`mempool) addr nonce)
-  $(count (add count (lent nonces)), txns [new-txns txns], mempool (~(del by `^mempool`mempool) addr))
+  %=  $
+    count    (add count (lent nonces))
+    txns     `(list txn)`(weld new-txns txns)
+    mempool  (~(del by `^mempool`mempool) addr)
+  ==
 ++  trim-mempool
   |=  [=mempool txns=(list txn)]
   ^-  ^mempool

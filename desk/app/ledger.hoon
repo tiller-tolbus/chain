@@ -143,33 +143,25 @@
       his  t.his
       internal-balances
     =-  +.-
-    ~&  txns.bloc.i.his
     %^  spin  txns.bloc.i.his
       internal-balances
-    |=  [txn=* br=(map addr:ch [balance=@ud nonce=@ud faucet=?])]
+    |=  [=txn:cw br=(map addr:ch [balance=@ud nonce=@ud faucet=?])]
     ^-  [* (map @ux [@ud @ud ?])]
     ::  is it structured like a transaction?
-    ~&  >  'is it structured like a transaction?'
-    ~&  >>  -.txn
-    ~&  >>  +.txn
     ?.  ?=(txn-signed:ch txn)  [txn br]
     ::  is it signed correctly?
-    ~&  >  'is it signed correctly?'
     =/  keys  (com:nu:crub:crypto who.txn)
     ?.  (safe:as:keys -.txn (jam +.txn))  [txn br]
     ::  is the nonce sequential?
-    ~&  >  'is the nonce sequential?'
     =/  prior  (prior-balance br who.txn)
     ?.  =(nonce.prior nonce.txn)  [txn br]
     ::  is it for %ledger instead of another app?
-    ~&  >  'is it for %ledger instead of another app?'
     ?.  ?=(txn-ledger:lg txn)
       [txn (~(put by br) who.txn [balance.prior +(nonce.prior) faucet.prior])]
     =/  cmd=ledger-cmd:lg  cmd.txn
     ?-  cmd
         [%send target=@ amount=@]
       ::  do they have the tokens they want to send?
-      ~&  >  'do they have the tokens they want to send?'
       ?:  (gth amount.cmd balance.prior)  [txn br]
       =/  deducted
         %+  ~(put by br)  who.txn
