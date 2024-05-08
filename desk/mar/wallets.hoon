@@ -1,11 +1,11 @@
-|_  wallets=(set cord)
+|_  wallets=(map cord @ux)
 ++  grad  %noun
 ++  grow
   |%
-  ++  noun  (set cord)
+  ++  noun  wallets
   --
 ++  grab
   |%
-  ++  noun  wallets
+  ++  noun  (map cord @ux)
   --
 --

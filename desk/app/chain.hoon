@@ -72,7 +72,7 @@
   ?>  ?=(^ pole)
   ?+  pole  [~ ~]
       [%x %wallets ~]
-    ``wallets+!>(~(key by wallets))
+    ``wallets+!>((~(run by wallets) |=(=wallet:ch pub.wallet)))
       [%x %balances ~]
     ``balances+!>(.^(balances:lg %gx /(scot %p our.bowl)/ledger/(scot %da now.bowl)/balances/noun))
       [%x %transactions addr=@ ~]
@@ -134,6 +134,13 @@
       ?~  p.sign
         cor
       ((slog leaf+"failed faucet" u.p.sign) cor)
+    ==
+      [%send-txn ~]
+    ?+  -.sign  !!
+        %poke-ack
+      ?~  p.sign
+        cor
+      ((slog leaf+"failed send-txn" u.p.sign) cor)
     ==
   ==
 ++  poke
@@ -255,7 +262,7 @@
   |=  =addr:ch
   =/  nonces  (~(key bi sent-txns) addr)
   ?~  nonces  0
-  (~(rep in `(set @ud)`nonces) max)
+  +((~(rep in `(set @ud)`nonces) max))
 ++  committed-nonce
   |=  =addr:ch
   ^-  @ud
