@@ -70,27 +70,30 @@
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?>  ?=(^ pole)
+  =,  pole
   ?+  pole  [~ ~]
       [%x %wallets ~]
     ``wallets+!>((~(run by wallets) |=(=wallet:ch pub.wallet)))
       [%x %balances ~]
     ``balances+!>(.^(balances:lg %gx /(scot %p our.bowl)/ledger/(scot %da now.bowl)/balances/noun))
-      [%x %transactions addr=@ ~]
+      [%x %transactions adr=@t ~]
+    =/  addr  (slav %ux adr.pole)
     =-  ``transactions+!>(~(tap in -))
     ^-  (set txn-signed:ch)
-    =/  nonces  (~(key bi sent-txns) addr.pole)
+    =/  nonces  (~(key bi sent-txns) addr)
     %-  ~(run in nonces)
     |=  nonce=@ud
-    (~(got bi sent-txns) addr.pole nonce)
-      [%x %transactions addr=@ %pending ~]
+    (~(got bi sent-txns) addr nonce)
+      [%x %transactions adr=@ %pending ~]
+    =/  addr  (slav %ux adr.pole)
     =/  wallet-txns
       =-  ~(tap in -)
       ^-  (set txn-signed:ch)
-      =/  nonces  (~(key bi sent-txns) addr.pole)
+      =/  nonces  (~(key bi sent-txns) addr)
       %-  ~(run in nonces)
       |=  nonce=@ud
-      (~(got bi sent-txns) addr.pole nonce)
-    =/  com  (committed-nonce addr.pole)
+      (~(got bi sent-txns) addr nonce)
+    =/  com  (committed-nonce addr)
     =-  ``transactions+!>(-)
     %+  skim  wallet-txns
     |=  =txn-signed:ch
