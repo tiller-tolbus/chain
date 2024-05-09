@@ -109,7 +109,12 @@
         cor
       ((slog leaf+"failed subscription to pki" u.p.sign) cor)
         %fact
-      (take-pki !<(pki-store:pki q.cage.sign))
+      ?+  p.cage.sign  !!
+          %pki-snapshot
+        (take-pki !<(pki-store:pki q.cage.sign))
+          %pki-diff
+        (take-pki-diff !<(pki-entry:pki q.cage.sign))
+      ==
     ==
   ==
 ++  balances
@@ -176,6 +181,10 @@
   |=  p=pki-store:pki
   ^+  cor
   cor(pki-store p)
+++  take-pki-diff
+  |=  p=pki-entry:pki
+  ^+  cor
+  cor(pki-store (~(put bi pki-store) ship.p life.p pass.p))
 ++  watch-pki
   (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  watch-blocs
