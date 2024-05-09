@@ -273,7 +273,7 @@ $:  %0
       ::  If all good we commit the bloc to history, reset local bloc and qc,
       ::  increment height
       ::  then broadcast the qc of the committed bloc to sync everyone's vote store
-      =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round ~]
+      =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
       =.  state
       %=  state
         history
@@ -344,7 +344,7 @@ $:  %0
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-bloc  [our.bowl ~ now.bowl +(height.local) 0 ~]
+    =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
     %=  $
       history
         ~&  >  ~
