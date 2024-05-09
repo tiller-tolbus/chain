@@ -48,7 +48,7 @@
 ::  named to avoid conflict with stdlib step
 +$  steppe  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
-++  delta  ~s3  :: time between steps
+++  delta  ~s4  :: time between steps
 ++  addendum-delta  ~s2
 +$  referendum  [=height =round =stage]
 +$  vote
@@ -63,12 +63,38 @@
 +$  vote-store  (jug vote signature)
 ::  constants
 ++  nodes  ^-  (lest node)
-:~  ~zod
-    ~nec
-    ~bud
-    ~wes
-==
-++  primary  ~zod
+  :~  ~woldeg
+      ~sartyr
+      ~mocbel
+      ~posdeg
+      ~firdun
+      ~tomdys
+      ~siddef
+      ~sibnus
+      ~holnes
+      ~livpub
+      ~micdyt
+      ~wanlur
+      ~davbel
+      ~hosdys
+      ~ridlyd
+      ~sabbus
+      ~firbex
+      ~fipdel
+      ~matwet
+      ~matdel
+      ~bilreg
+      ~racwet
+      ~roswet
+      ~batbex
+      ~fodwet
+      ~wittyv
+      ~mosdef
+      ~matfen
+      ~hobdem
+      ~pocwet
+  ==
+++  primary  ~woldeg
 +$  addr  @ux
 ::  functions
 :: ++  quorum

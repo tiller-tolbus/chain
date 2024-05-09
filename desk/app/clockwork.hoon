@@ -41,7 +41,7 @@ $:  %0
   ~&  >  "%chain initialized"
   :_  this(robin nodes)
     :-  clockstep-watch-card:hd
-    :-  fake-pki-card:hd  pki-cards:hd
+    pki-cards:hd
 ::
 ++  on-leave
   |=  =path
@@ -86,7 +86,7 @@ $:  %0
       ~&  >>  history=history
       ?>  =(src.bowl primary)
       =.  state  *state-0
-      :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
+      :_  this(robin nodes)  [stop-card:hd pki-cards:hd]
     ::  TODO pause poke?
     ::  actual checks
     ::  throw away unrecognized pokes
@@ -101,6 +101,7 @@ $:  %0
     ==
   ++  handle-start
     |=  ts=@da
+    ?>  =(src.bowl primary)
     ~&  handling-start=ts
     ?.  =(*bloc bloc.local)  [~ this]
     ~&  "bootstrapping"
