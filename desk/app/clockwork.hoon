@@ -185,7 +185,7 @@ $:  %0
     =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
     ~&  >>>  timer-pinged-at=[count=count height=height.local round=round steppe=steppe]
     ~&  >  current-time=[m s f]:(yell now.bowl)
-    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
+    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl delta))  ::  uhm
     ?-  steppe
         %1
       ~&  >>  leader=leader
@@ -278,7 +278,7 @@ $:  %0
       %=  state
         history
           ~&  >  ~
-          ~&  >  bloc-commited=[h=height.bloc.i.valid r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
+          ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
           ~&  >  ~
         %^  put:hon  history
           height.bloc.i.valid
@@ -348,7 +348,7 @@ $:  %0
     %=  $
       history
         ~&  >  ~
-        ~&  >  bloc-commited=[h=height.bloc.i.valid r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
+        ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
         ~&  >  ~
         %^  put:hon  history
           height.bloc.i.valid
@@ -417,7 +417,7 @@ $:  %0
   %+  turn  nodes  |=  sip=@p
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card
-  [%pass /addendum %arvo %b %wait (add now.bowl ~s2)] :: TODO time this properly
+  [%pass /addendum %arvo %b %wait (add now.bowl addendum-delta)] :: TODO time this properly
 ++  bloc-fact-card  ^-  card
   =/  update
     ::  ?:  (lth ~(wyt by history) 2)
@@ -452,7 +452,6 @@ $:  %0
 ++  trim-mempool
   |=  [=mempool txns=(list txn)]
   ^-  ^mempool
-  ~&  >  txns
   ?~  txns  mempool
   ?.  ?=(txn-signed:ch i.txns)  $(txns t.txns)
   $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)

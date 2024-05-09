@@ -48,7 +48,8 @@
 ::  named to avoid conflict with stdlib step
 +$  steppe  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
-++  delta  ~s2  :: time between steps
+++  delta  ~s3  :: time between steps
+++  addendum-delta  ~s2
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  =bloc
