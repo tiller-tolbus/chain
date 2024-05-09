@@ -3,4 +3,5 @@
     %pki-store
     %chain
     %ledger
+    %chain-ui
 ==
