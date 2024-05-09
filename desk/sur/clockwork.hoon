@@ -1,25 +1,39 @@
-:: types
+/+  *mip
 |%
 +$  signature  [p=@uvH q=ship r=life]
 +$  action
   $%  [%start ts=@da]
       [%broadcast =qc]
       [%txn =txn]
+      [%faucet =addr]
       :: [%vote s=signature vote]
   ==
-+$  history  (list block)
-+$  block
++$  voted-bloc
+  $:  =bloc
+      =quorum
+  ==
++$  history  ((mop @ud voted-bloc) lth)
+++  hon  ((on @ud voted-bloc) lth)
++$  bloc-update
+  $%  [%blocs =history]
+      [%reset =reset-id]
+  ==
++$  reset-id  @
+::  named to avoid conflict with stdlib block
++$  bloc
   $:  mint=node
       txns=(list txn)
       ts=@da
       =height
+      =round
       last=quorum
   ==
-+$  mempool  (set txn)
+::  address to nonce to transaction
++$  mempool  (mip @ux @ud txn)
 ::  for the testnet, transactions are not validated
 ::  and %ledger will ignore invalid ones
-+$  txn  *
-:: +$  signed-block  (pair signature block)
++$  txn  ^
+:: +$  signed-bloc  (pair signature bloc)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
 +$  height  @ud
@@ -31,12 +45,14 @@
 ::     %precommit
 ::     %commit
 ::   ==
-+$  step  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
+::  named to avoid conflict with stdlib step
++$  steppe  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
 ++  delta  ~s3  :: time between steps
+++  addendum-delta  ~s2
 +$  referendum  [=height =round =stage]
 +$  vote
-  $:  =block
+  $:  =bloc
       referendum
   ==
 :: +$  raw-signed-vote  @
@@ -52,6 +68,8 @@
     ~bud
     ~wes
 ==
+++  primary  ~zod
++$  addr  @ux
 ::  functions
 :: ++  quorum
 ::   |%

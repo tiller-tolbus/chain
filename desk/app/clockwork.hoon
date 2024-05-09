@@ -1,7 +1,7 @@
-/-  *clockwork, pki=pki-store
+/-  *clockwork, pki=pki-store, ch=chain
 /+  lib=clockwork,
     dbug,
-    mip
+    *mip
 =,  crypto
 |%
 +$  versioned-state
@@ -12,11 +12,9 @@ $:  %0
     $=  local          :: local variables from spec
       $:
         =height
-        =block
+        =bloc
         qc=(unit qc)   ::  quorum certificate
         =mempool
-        :: =round
-        :: =step
       ==
                        ::  global state, this should sync among nodes
     robin=(lest node)  ::  node order, round-robin
@@ -26,6 +24,7 @@ $:  %0
     our-life=@ud
     keys=acru:ames
     =pki-store:pki
+    faucet-nonce=@ud
 ==
 +$  card  card:agent:gall
 --
@@ -55,13 +54,19 @@ $:  %0
 ++  on-load
   |=  old-state=vase
     ::  dev
-  :_  this(robin nodes)
-    :-  clockstep-watch-card:hd
-    :-  fake-pki-card:hd  pki-cards:hd
+    ::  :_  this(robin nodes)
+    ::    :-  clockstep-watch-card:hd
+    ::    :-  fake-pki-card:hd  pki-cards:hd
     ::  prod
-    ::  :-  ~  this(state !<(state-0 old-state))
+    :-  ~  this(state !<(state-0 old-state))
 ::
-++  on-watch  |=(=(pole knot) [~ this])
+++  on-watch
+  |=  =(pole knot)
+  ?+  pole  ~|(bad-watch-path+`path`pole !!)
+      [%blocs ~]
+    :_  this
+    ~[[%give %fact ~ bloc-update+!>([%blocs history])]]
+  ==
 ++  on-poke
   |=  [=mark =vase]
   |^
@@ -73,12 +78,13 @@ $:  %0
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
     ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
     ?:  ?=(%print q.vase)
-      =/  his  (flop history)
-      ?~  his  ~&  >>>  "no blocks found"  [~ this]
-      ~&  >>  last-block=i.his  [~ this]
+      =/  his  (bap:hon history)
+      ?~  his  ~&  >>>  "no blocs found"  [~ this]
+      ~&  >>  last-bloc=i.his  [~ this]
     ?:  ?=(%nuke q.vase)
       ~&  >>>  "nuking state"
       ~&  >>  history=history
+      ?>  =(src.bowl primary)
       =.  state  *state-0
       :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
     ::  TODO pause poke?
@@ -91,14 +97,15 @@ $:  %0
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
       %txn        (handle-txn +.action)
+      %faucet     (handle-faucet +.action)
     ==
   ++  handle-start
     |=  ts=@da
     ~&  handling-start=ts
-    ?.  =(*block block.local)  [~ this]
+    ?.  =(*bloc bloc.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-block=block   [our.bowl ~ ts height.local ~]
-    =.  block.local  init-block
+    =/  init-bloc=bloc   [our.bowl ~ ts height.local 0 ~]
+    =.  bloc.local  init-bloc
     =.  qc.local  ~
     ?.  .=(src.bowl i.robin)  [~ this]
     :_  this
@@ -115,7 +122,7 @@ $:  %0
     |-
     ?~  sigs  [~ this]
     =/  sig  i.sigs
-    =/  pass  (~(get bi:mip pki-store) q.sig r.sig)
+    =/  pass  (~(get bi pki-store) q.sig r.sig)
     ?~  pass  $(sigs t.sigs)
     =/  msg  (jam vote)
     =/  keys  (com:nu:crub u.pass)
@@ -124,9 +131,22 @@ $:  %0
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   ++  handle-txn
     |=  =txn
-    ~&  handling-txn=txn
-    ?>  (lte (bex 10) (met 3 (jam txn)))
-    [~ this(mempool.local (~(put to mempool.local) txn))]
+    ?>  (gte (bex 10) (met 3 (jam txn)))
+    ?.  ?=(txn-signed:ch txn)  [~ this]
+    [~ this(mempool.local (~(put bi mempool.local) who.txn nonce.txn txn))]
+  ++  handle-faucet
+    |=  =addr
+    =/  =txn-unsigned:ch
+      :*  (latest-key our.bowl)
+          faucet-nonce
+          %ledger
+          0
+          [%send addr (bex 16)]
+      ==
+    =/  =txn-signed:ch  [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
+    ~&  >>>  [txn-signed]
+    =.  faucet-nonce  +(faucet-nonce)
+    (handle-txn txn-signed)
   --
 ++  on-peek   |=(=(pole knot) ~)
 ++  on-agent
@@ -149,7 +169,7 @@ $:  %0
           %pki-diff
         =/  entry  !<(pki-entry:pki q.cage.sign)
         =+  entry
-        =/  new-pki-store  (~(put bi:mip pki-store) ship life pass)
+        =/  new-pki-store  (~(put bi pki-store) ship life pass)
         [~ this(pki-store new-pki-store)]
       ==
     ==
@@ -157,13 +177,16 @@ $:  %0
   ::  Main agent logic
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
-    =/  [=round rem=@]  (dvr (dec count) 4)
-    =/  =step  (step +(rem))
+    =/  [=round rem=@]
+      ::  ?:  =(count 0)
+      ::    [0 0]
+      (dvr (dec count) 4)
+    =/  =steppe  (steppe +(rem))
     =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
-    ~&  >>>  timer-pinged-at=[count=count height=height.local round=round step=step]
+    ~&  >>>  timer-pinged-at=[count=count height=height.local round=round steppe=steppe]
     ~&  >  current-time=[m s f]:(yell now.bowl)
-    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl ~s3))  ::  uhm
-    ?-  step
+    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl delta))  ::  uhm
+    ?-  steppe
         %1
       ~&  >>  leader=leader
       ::  In step 1 only the leader votes
@@ -171,21 +194,25 @@ $:  %0
       ::  If we are the leader we look for a qc in our vote store at the current height
       ::  that is more recent (i.e. same height, higher round OR stage)
       ::  than our local state qc. If we find one, we vote for that and update our local
-      ::  block and state.
-      ::  If not, we propose our current local block with txns from our mempool
+      ::  bloc and state.
+      ::  If not, we propose our current local bloc with txns from our mempool
       =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
       =.  state
-        ?~  most-recent  state(txns.block.local (pick-txns-from mempool.local))
+        ?~  most-recent
+          %=  state
+            txns.bloc.local  (pick-txns-from mempool.local)
+            round.bloc.local  round
+          ==
         %=  state
-          block.local  block.u.most-recent
+          bloc.local  bloc.u.most-recent
           qc.local     (some u.most-recent)
         ==
       :: :_  increment-step
       :_  this
       %-  broadcast-cards:hd
-      =/  =vote  [block.local height.local round %1]
-      :: ~&  >  leader-vote=[block.local height=height.local round=round]
+      =/  =vote  [bloc.local height.local round %1]
+      :: ~&  >  leader-vote=[bloc.local height=height.local round=round]
       =/  sig=(set signature)  (silt ~[[(sigh:as:keys (jam vote)) our.bowl our-life]])
       [vote sig]
         ::
@@ -196,33 +223,33 @@ $:  %0
       ::  If the leader didn't vote on step 1 (which really shouldn't happen!) we bail
       ::  bail meaning incrementing the step and doing nothing
       ?~  lbl  ~&  "no recent vote from leader found"  bail
-      ::  We compare the block sent by the leader with our local block
-      ::  If the leader's block is not at all more recent (in height and (round or stage))
+      ::  We compare the bloc sent by the leader with our local bloc
+      ::  If the leader's bloc is not at all more recent (in height and (round or stage))
       ::  we bail as nothing new was received
       ?.  =(height.u.lbl height.local)
-        ~&  "received block at incorrect height"
+        ~&  "received bloc at incorrect height"
         bail
       =/  received-new=?
         ?~  qc.local  %.y
         (as-recent:qcu:lib u.lbl u.qc.local)
       ~&  >  received-new=received-new
       ?.  received-new
-        ~&  "did not receive new block from leader"
+        ~&  "did not receive new bloc from leader"
         bail
-      ::  If we correctly received a new block from the leader we save that to local state
+      ::  If we correctly received a new bloc from the leader we save that to local state
       ::  and vote for it
       =.  state
       %=  state
-        block.local  block.u.lbl
+        bloc.local  bloc.u.lbl
         qc.local     lbl
       ==
       :_  this
-      =/  =vote  [block.u.lbl height.u.lbl round %1]
+      =/  =vote  [bloc.u.lbl height.u.lbl round %1]
       ~&  >>  voting=[height.local round %1]
       (vote-and-broadcast u.lbl vote)
         ::
         %3
-      ::  In step 2 we should have received votes from 2/3 of the nodes for some block
+      ::  In step 2 we should have received votes from 2/3 of the nodes for some bloc
       ::  in the current height and round, and stage %1. We check for that.
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round %1)
       ::  If that's not the case we bail
@@ -230,11 +257,11 @@ $:  %0
       ::  If good we update our state, and send a stage %2 (final vote).
       =.  state
       %=  state
-        block.local  block.i.valid
+        bloc.local  bloc.i.valid
         qc.local     (some i.valid)
       ==
       :_  this
-      =/  vote  [block.i.valid height.local round %2]
+      =/  vote  [bloc.i.valid height.local round %2]
       ~&  >>  voting=[height.local round %2]
       (vote-and-broadcast i.valid vote)
         %4
@@ -243,26 +270,30 @@ $:  %0
       ::  If we didn't find a valid quorum we increment the step
       ::  and schedule the final addendum cleanup stage
       ?~  valid  ~&  "no valid qcs at stage 2"  schedule-addendum
-      ::  If all good we commit the block to history, reset local block and qc,
+      ::  If all good we commit the bloc to history, reset local bloc and qc,
       ::  increment height
-      ::  then broadcast the qc of the committed block to sync everyone's vote store
-      =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
+      ::  then broadcast the qc of the committed bloc to sync everyone's vote store
+      =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
       =.  state
       %=  state
         history
           ~&  >  ~
-          ~&  >  block-commited=[h=height.local r=round who=mint.block.i.valid txns=txns.block.i.valid]
+          ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
           ~&  >  ~
-          (snoc history block.i.valid)
-        mempool.local  (~(dif in mempool.local) (silt txns.block.i.valid))
+        %^  put:hon  history
+          height.bloc.i.valid
+        `voted-bloc`[bloc.i.valid quorum.i.valid]
+        mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
         height.local  +(height.local)
-        block.local  init-block
+        bloc.local  init-bloc
         qc.local     ~
       ==
       :: :_  increment-step
       :_  this
-      :-  addendum-card:hd
-      (broadcast-cards:hd i.valid)
+      :*  addendum-card:hd
+          bloc-fact-card:hd
+          (broadcast-cards:hd i.valid)
+      ==
     ==
 ++  vote-and-broadcast
   |=  [p=qc =vote]  ^-  (list card)
@@ -301,29 +332,31 @@ $:  %0
       our-life  life.g
       keys      (nol:nu:crub u.private-key)
     ==
-  ::  %final stage of block syncing
+  ::  %final stage of bloc syncing
   ++  handle-addendum
     ~&  >>  addendum-phase=[m s f]:(yell now.bowl)
     ^-  (quip card _this)
     ::  In the addendum stage we look in our vote store for valid qcs of stage %2 of a height
     ::  greater than our local height
-    =/  valid  (~(future-blocks vs:lib vote-store) height.local)
-    ::  We then iterate through them and do what we did in step %4; commit block to history,
-    ::  increment height, reset our local block/qc and broadcast the committed block
+    =/  valid  (~(future-blocs vs:lib vote-store) height.local)
+    ::  We then iterate through them and do what we did in step %4; commit bloc to history,
+    ::  increment height, reset our local bloc/qc and broadcast the committed bloc
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-block  [our.bowl ~ now.bowl +(height.local) ~]
+    =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
     %=  $
       history
         ~&  >  ~
-        ~&  >  block-commited=[h=height.local who=mint.block.i.valid txns=txns.block.i.valid]
+        ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
         ~&  >  ~
-        (snoc history block.i.valid)
+        %^  put:hon  history
+          height.bloc.i.valid
+        [bloc.i.valid quorum.i.valid]
       height.local   +(height.local)
-      block.local    init-block
+      ::  bloc.local    init-bloc
       qc.local       ~
-      mempool.local  (~(dif in mempool.local) (silt txns.block.i.valid))
+      mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
@@ -380,20 +413,53 @@ $:  %0
 ++  stop-card
   [%pass /wire %agent [our.bowl %clockstep] %poke [%noun !>(%stop)]]
 ++  nuke-cards
+  :-  [%give %fact ~[/blocs] bloc-update+!>([%reset ~])]
   %+  turn  nodes  |=  sip=@p
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card
-  [%pass /addendum %arvo %b %wait (add now.bowl ~s2)] :: TODO time this properly
+  [%pass /addendum %arvo %b %wait (add now.bowl addendum-delta)] :: TODO time this properly
+++  bloc-fact-card  ^-  card
+  =/  update
+    ::  ?:  (lth ~(wyt by history) 2)
+      history
+    ::  (lot:hon history `(sub ~(wyt by history) 2) `~(wyt by history))
+  [%give %fact ~[/blocs] bloc-update+!>([%blocs update])]
 ++  pick-txns-from
   |=  =mempool
   ^-  (list txn)
-  ::  number of transactions in a block
+  ::  number of transactions in a bloc
   =/  needed  1.024
   =/  count  0
   =/  txns=(list txn)  ~
   |-
   ?~  mempool  txns
   ?:  =(count needed)  txns
-  =/  new=[txn ^mempool]  ~(get to mempool)
-  $(count +(count), txns [-.new txns], mempool +.new)
+  =/  addr=@ux
+    =/  addrs  ~(key by `^mempool`mempool)
+    ?~  addrs  !!
+    -:~(get to addrs)
+  =/  nonces
+    (scag (sub needed count) (sort ~(tap in (~(key bi `^mempool`mempool) addr)) lth))
+  =/  new-txns=(list txn)
+    %+  turn  nonces
+    |=  nonce=@ud
+    (~(got bi `^mempool`mempool) addr nonce)
+  %=  $
+    count    (add count (lent nonces))
+    txns     `(list txn)`(weld new-txns txns)
+    mempool  (~(del by `^mempool`mempool) addr)
+  ==
+++  trim-mempool
+  |=  [=mempool txns=(list txn)]
+  ^-  ^mempool
+  ?~  txns  mempool
+  ?.  ?=(txn-signed:ch i.txns)  $(txns t.txns)
+  $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)
+++  latest-key
+  |=  =ship
+  ^-  pass
+  =/  top  (~(rep in (~(key bi pki-store) ship)) max)
+  =/  key  (~(get bi pki-store) ship top)
+  ?~  key  !!
+  u.key
 --

@@ -1,4 +1,6 @@
 :~  %clockwork
     %clockstep
     %pki-store
+    %chain
+    %ledger
 ==

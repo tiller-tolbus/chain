@@ -28,7 +28,7 @@
   ::   %+  gte  ~(wyt in +.i)  (sm (lent nodes))
   ++  most-recent
     |=  =height
-    %+  roll  ~(tap by vote-store) 
+    %+  roll  ~(tap by vote-store)
     |=  [i=qc acc=(unit qc)]
     ?.  (valid:qcu i)  acc
     ?.  =(height height.i)  acc
@@ -41,7 +41,7 @@
     %+  roll  ~(tap by vote-store)
     |=  [i=qc acc=(unit qc)]
     ::  ~&  "checking mint"
-    ?.  =(mint.block.i leader)  acc
+    ?.  =(mint.bloc.i leader)  acc
     :: ~&  "checking height"
     :: ~&  [our-height=height their-height=height.i]
     ::  ?.  =(height height.i)  acc
@@ -50,7 +50,7 @@
     :: ~&  "checking recency"
     ?:  (more-recent:qcu i u.acc)  (some i)  acc
   ::
-  ++  future-blocks
+  ++  future-blocs
     |=  =height
     ^-  (list qc)
     %+  sort
@@ -66,7 +66,7 @@
 ++  qcu
   |%
   ++  as-recent
-    |=  [a=qc b=qc]  
+    |=  [a=qc b=qc]
     ^-  ?
     ?:  (gte round.a round.b)  %.y
     ?&  .=(round.a round.b)
@@ -84,4 +84,3 @@
     %+  gte  ~(wyt in quorum.qc)  (sm (lent nodes))
   --
 --
-  
