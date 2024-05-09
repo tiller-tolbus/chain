@@ -86,7 +86,9 @@ $:  %0
       ~&  >>  history=history
       ?>  =(src.bowl primary)
       =.  state  *state-0
-      :_  this(robin nodes)  [stop-card:hd pki-cards:hd]
+      ::  this relies on depth-first move order
+      ::  reevaluate when breadth-first is close
+      :_  this(robin nodes)  [stop-card:hd pki-leave-card pki-cards:hd]
     ::  TODO pause poke?
     ::  actual checks
     ::  throw away unrecognized pokes
@@ -390,6 +392,8 @@ $:  %0
 ++  pki-watch-card
   ::  subscribe to pki-store updates
   [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
+++  pki-leave-card
+  [%pass /pki-store %agent [our.bowl %pki-store] %leave ~]
 ++  broadcast-cards
   |=  p=qc  ^-  (list card)
   %+  turn  nodes  |=  s=@p  (broadcast-card p s)
