@@ -8,12 +8,8 @@
       [%faucet =addr]
       :: [%vote s=signature vote]
   ==
-+$  voted-bloc
-  $:  =bloc
-      =quorum
-  ==
-+$  history  ((mop @ud voted-bloc) lth)
-++  hon  ((on @ud voted-bloc) lth)
++$  history  ((mop @ud qc) lth)
+++  hon  ((on @ud qc) lth)
 +$  bloc-update
   $%  [%blocs =history]
       [%reset =reset-id]
@@ -24,9 +20,7 @@
   $:  mint=node
       txns=(list txn)
       ts=@da
-      =height
-      =round
-      last=quorum
+      ::  last=quorum
   ==
 ::  address to nonce to transaction
 +$  mempool  (mip @ux @ud txn)
@@ -62,39 +56,44 @@
 +$  qc  [vote =quorum]  :: provisional qc, no guarantees of majority
 +$  vote-store  (jug vote signature)
 ::  constants
+:: ++  nodes  ^-  (lest node)
+::   :~  ~woldeg
+::       ~sartyr
+::       ~mocbel
+::       ~posdeg
+::       ~firdun
+::       ~tomdys
+::       ~siddef
+::       ~sibnus
+::       ~holnes
+::       ~livpub
+::       ~micdyt
+::       ~wanlur
+::       ~davbel
+::       ~hosdys
+::       ~ridlyd
+::       ~sabbus
+::       ~firbex
+::       ~fipdel
+::       ~matwet
+::       ~matdel
+::       ~bilreg
+::       ~racwet
+::       ~roswet
+::       ~batbex
+::       ~fodwet
+::       ~wittyv
+::       ~mosdef
+::       ~matfen
+::       ~hobdem
+::       ~pocwet
+::   ==
+:: ++  primary  ~woldeg
+:: fake constants
 ++  nodes  ^-  (lest node)
-  :~  ~woldeg
-      ~sartyr
-      ~mocbel
-      ~posdeg
-      ~firdun
-      ~tomdys
-      ~siddef
-      ~sibnus
-      ~holnes
-      ~livpub
-      ~micdyt
-      ~wanlur
-      ~davbel
-      ~hosdys
-      ~ridlyd
-      ~sabbus
-      ~firbex
-      ~fipdel
-      ~matwet
-      ~matdel
-      ~bilreg
-      ~racwet
-      ~roswet
-      ~batbex
-      ~fodwet
-      ~wittyv
-      ~mosdef
-      ~matfen
-      ~hobdem
-      ~pocwet
-  ==
-++  primary  ~woldeg
+  ~[~zod ~nec ~bud ~wes]
+++  primary  ~zod
+::
 +$  addr  @ux
 ::  functions
 :: ++  quorum

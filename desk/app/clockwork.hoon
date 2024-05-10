@@ -73,7 +73,7 @@ $:  %0
   :: check various conditions for testing
   ?.  ?=(%noun mark)  [~ this]
     ?:  ?=(%keys q.vase)
-      ~&  `signature`[(sigh:as:keys 1) our.bowl our-life]
+      ~&  `signature`(sign-vote *vote)
       [~ this]
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
     ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
@@ -130,7 +130,7 @@ $:  %0
     =/  msg  (jam vote)
     =/  keys  (com:nu:crub u.pass)
     ?.  (safe:as:keys p.sig msg)
-      $(sigs t.sigs)
+      ~&  "received invalid broadcast" $(sigs t.sigs)
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   ++  handle-txn
     |=  =txn
@@ -181,10 +181,11 @@ $:  %0
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
     =/  [=round rem=@]
-      ::  ?:  =(count 0)
-      ::    [0 0]
+      ?:  =(count 0)
+        [0 0]
       (dvr (dec count) 4)
     =/  =steppe  (steppe +(rem))
+    ::  calculate leader
     =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
     ~&  >>>  timer-pinged-at=[count=count height=height.local round=round steppe=steppe]
     ~&  >  current-time=[m s f]:(yell now.bowl)
@@ -201,22 +202,16 @@ $:  %0
       ::  If not, we propose our current local bloc with txns from our mempool
       =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
       ~&  most-recent=most-recent
-      =.  state
-        ?~  most-recent
-          %=  state
-            txns.bloc.local  (pick-txns-from mempool.local)
-            round.bloc.local  round
-          ==
-        %=  state
-          bloc.local  bloc.u.most-recent
-          qc.local     (some u.most-recent)
+      =?  local  ?&(!=(~ most-recent) !=(qc.local u.most-recent))
+        %=  local
+          qc  u.most-recent
+          bloc  bloc.u.most-recent
         ==
-      :: :_  increment-step
       :_  this
       %-  broadcast-cards:hd
       =/  =vote  [bloc.local height.local round %1]
       :: ~&  >  leader-vote=[bloc.local height=height.local round=round]
-      =/  sig=(set signature)  (silt ~[[(sigh:as:keys (jam vote)) our.bowl our-life]])
+      =/  sig=(set signature)  (silt ~[(sign-vote vote) our.bowl our-life])
       [vote sig]
         ::
         %2
@@ -226,8 +221,8 @@ $:  %0
       ::  If the leader didn't vote on step 1 (which really shouldn't happen!) we bail
       ::  bail meaning incrementing the step and doing nothing
       ?~  lbl  ~&  "no recent vote from leader found"  bail
-      ::  We compare the bloc sent by the leader with our local bloc
-      ::  If the leader's bloc is not at all more recent (in height and (round or stage))
+      ::  We compare the bloc sent by the leader with our local height
+      ::  If the leader's bloc is not at all more recent
       ::  we bail as nothing new was received
       ?.  =(height.u.lbl height.local)
         ~&  "received bloc at incorrect height"
@@ -247,8 +242,12 @@ $:  %0
         qc.local     lbl
       ==
       :_  this
-      =/  =vote  [bloc.u.lbl height.u.lbl round %1]
-      ~&  >>  voting=[height.local round %1]
+      =/  =vote
+        %=  vote.lbl
+          round  round
+          stage  %1
+        ==
+      ~&  >>  voting=vote
       (vote-and-broadcast u.lbl vote)
         ::
         %3
@@ -257,55 +256,56 @@ $:  %0
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round %1)
       ::  If that's not the case we bail
       ?~  valid  ~&  "no valid qcs at stage 1"  bail
+      ::  if there are more than one valid qcs, consider nuking
       ::  If good we update our state, and send a stage %2 (final vote).
       =.  state
       %=  state
         bloc.local  bloc.i.valid
-        qc.local     (some i.valid)
+        qc.local    (some i.valid)
       ==
       :_  this
       =/  vote  [bloc.i.valid height.local round %2]
       ~&  >>  voting=[height.local round %2]
       (vote-and-broadcast i.valid vote)
         %4
+      ::  addendum must be scheduled on this step
+      ::  crashes should be impossible
+      ::
       ::  Same as above, we should have received 2/3 of stage %2 votes for something
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round %2)
+      ::  consider: ?:  (gth (lent valid) 1)  nuke-network
+      ::
       ::  If we didn't find a valid quorum we increment the step
       ::  and schedule the final addendum cleanup stage
       ?~  valid  ~&  "no valid qcs at stage 2"  schedule-addendum
       ::  If all good we commit the bloc to history, reset local bloc and qc,
-      ::  increment height
-      ::  then broadcast the qc of the committed bloc to sync everyone's vote store
-      =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
+      ::  increment height  then broadcast the qc of the committed bloc to 
+      ::  sync everyone's vote store
+      =/  valid-qc  i.valid
+      ~&  >  ~
+      ~&  >  block-commited=valid-qc
+      ~&  >  ~
       =.  state
       %=  state
-        history
-          ~&  >  ~
-          ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
-          ~&  >  ~
-        %^  put:hon  history
-          height.bloc.i.valid
-        `voted-bloc`[bloc.i.valid quorum.i.valid]
-        mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
+        history  (put:hon history height.local valid-qc)
+        mempool.local  (trim-mempool mempool.local txns.bloc.valid-qc)
         height.local  +(height.local)
-        bloc.local  init-bloc
-        qc.local     ~
+        bloc.local  [our.bowl (pick-txns-from mempool) now.bowl]
+        qc.local    ~
       ==
       :: :_  increment-step
       :_  this
       :*  addendum-card:hd
           bloc-fact-card:hd
-          (broadcast-cards:hd i.valid)
+          (broadcast-cards:hd new-block)
       ==
     ==
 ++  vote-and-broadcast
   |=  [p=qc =vote]  ^-  (list card)
-  =/  =signature  [(sigh:as:keys (jam vote)) our.bowl our-life]
-  %+  roll  `(list @p)`nodes  |=  [i=@p acc=(list card)]
-  %+  weld  acc
-  :~  (broadcast-card p i)
-      (vote-card signature vote i)
-  ==
+  =/  =signature  (sign-vote vote)
+  %+  turn  `(list @p)`nodes
+  |=  =ship
+  (broadcast-card ship p(quorum (~(put in quorum) signature)))
   ++  schedule-addendum
     :_  this
     :~  addendum-card:hd
@@ -347,17 +347,16 @@ $:  %0
     =|  new-cards=(list card)
     |-
     ?~  valid  [new-cards this]
-    =/  init-bloc  [our.bowl ~ now.bowl +(height.local) round quorum.i.valid]
+    =/  init-txns=(list txn)
+      ?~  t.valid  (pick-txns-from mempool)  ~
+    =/  valid-qc  i.valid
+    ~&  >  ~
+    ~&  >  bloc-commited=valid-qc
+    ~&  >  ~
     %=  $
-      history
-        ~&  >  ~
-        ~&  >  bloc-commited=[h=height.local r=round.bloc.i.valid who=mint.bloc.i.valid txns=txns.bloc.i.valid]
-        ~&  >  ~
-        %^  put:hon  history
-          height.bloc.i.valid
-        [bloc.i.valid quorum.i.valid]
+      history  (put:hon history height.local valid-qc)
       height.local   +(height.local)
-      ::  bloc.local    init-bloc
+      bloc.local     [our.bowl init-txns now.bowl]
       qc.local       ~
       mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
@@ -467,4 +466,8 @@ $:  %0
   =/  key  (~(get bi pki-store) ship top)
   ?~  key  !!
   u.key
+++  sign-vote
+  |=  =vote
+  ^-  signature
+  [(sigh:as:keys (jam vote)) our.bowl our-life]
 --
