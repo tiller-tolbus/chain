@@ -41,7 +41,8 @@ $:  %0
   ~&  >  "%chain initialized"
   :_  this(robin nodes)
     :-  clockstep-watch-card:hd
-    pki-cards:hd
+    :-  fake-pki-card:hd  pki-cards:hd
+  
 ::
 ++  on-leave
   |=  =path
@@ -49,16 +50,14 @@ $:  %0
 ++  on-fail
   |=  [=term =tang]
   %-  (slog leaf+"error in {<dap.bowl>}" >term< tang)
-  [~ this]
+  `this
 ++  on-save   !>(state)
 ++  on-load
   |=  old-state=vase
-    ::  dev
-    ::  :_  this(robin nodes)
-    ::    :-  clockstep-watch-card:hd
-    ::    :-  fake-pki-card:hd  pki-cards:hd
-    ::  prod
-    :-  ~  this(state !<(state-0 old-state))
+  ::  dev
+  on-init
+ ::  prod
+    :: :-  ~  this(state !<(state-0 old-state))
 ::
 ++  on-watch
   |=  =(pole knot)
@@ -69,12 +68,13 @@ $:  %0
   ==
 ++  on-poke
   |=  [=mark =vase]
+  ~&  ["++on-poke from" src.bowl]
   |^
   :: check various conditions for testing
   ?.  ?=(%noun mark)  [~ this]
-    ?:  ?=(%keys q.vase)
-      ~&  `signature`(sign-vote *vote)
-      [~ this]
+    ::?:  ?=(%keys q.vase)
+      ::~&  `signature`(sign-vote *vote)
+      ::[~ this]
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
     ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
     ?:  ?=(%print q.vase)
@@ -88,13 +88,14 @@ $:  %0
       =.  state  *state-0
       ::  this relies on depth-first move order
       ::  reevaluate when breadth-first is close
-      :_  this(robin nodes)  [stop-card:hd pki-leave-card pki-cards:hd]
+      :_  this(robin nodes)  [stop-card:hd pki-leave-card:hd pki-cards:hd]
     ::  TODO pause poke?
     ::  actual checks
     ::  throw away unrecognized pokes
     =/  uaction  ((soft action) q.vase)
-    ?~  uaction  [~ this]
-    =/  action  u.uaction
+    ?~  uaction   
+      ~&  [%unrecognized-action src.bowl q.vase]  [~ this]
+    =/  action  (need uaction)
     ?-  -.action
       %start      (handle-start +.action)
       %broadcast  (handle-broadcast +.action)
@@ -107,7 +108,8 @@ $:  %0
     ~&  handling-start=ts
     ?.  =(*bloc bloc.local)  [~ this]
     ~&  "bootstrapping"
-    =/  init-bloc=bloc   [our.bowl ~ ts height.local 0 ~]
+    ~&  ["our.bowl" our.bowl]
+    =/  init-bloc=bloc   [our.bowl ~ ts]
     =.  bloc.local  init-bloc
     =.  qc.local  ~
     ?.  .=(src.bowl i.robin)  [~ this]
@@ -115,22 +117,23 @@ $:  %0
     :-  (start-timer-card:hd ts)
         (bootstrap-cards:hd ts)
   ++  handle-broadcast
-    |=  =qc  ^-  (quip card _this)
-    ~&  handling-broadcast=[from=src.bowl h=height.qc r=round.qc s=stage.qc]
-    ?:  (lth height.qc height.local)
-      ~&  bail-height-below-current=[src=height.qc our=height.local]
+    |=  [=vote =quorum]  ^-  (quip card _this)
+    ~&  ["broadcast" from=src.bowl h=height.vote r=round.vote s=stage.vote]
+    ?:  (lth height.vote height.local)
+      ~&  ["old height" src=height.vote our=height.local]
       [~ this]
-    =/  =vote  -.qc
-    =/  sigs=(list signature)  ~(tap in quorum.qc)
+    =/  sigs=(list signature)  ~(tap in quorum)
     |-
     ?~  sigs  [~ this]
     =/  sig  i.sigs
     =/  pass  (~(get bi pki-store) q.sig r.sig)
-    ?~  pass  $(sigs t.sigs)
-    =/  msg  (jam vote)
+    ?~  pass
+      ~&  "couldn't find key for {<q.sig>} {<r.sig>}"  $(sigs t.sigs)
     =/  keys  (com:nu:crub u.pass)
-    ?.  (safe:as:keys p.sig msg)
-      ~&  "received invalid broadcast" $(sigs t.sigs)
+    ?.  (safe:as:keys p.sig (jam vote))
+      ~&  ["received invalid vote" sig vote]
+      $(sigs t.sigs)
+    :: ~&  >  ["received valid vote" sig vote]
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   ++  handle-txn
     |=  =txn
@@ -176,10 +179,16 @@ $:  %0
         [~ this(pki-store new-pki-store)]
       ==
     ==
+      [%broadcast ~]
+    ~?  ?=(%poke-ack -.sign)
+      [%broadcast-acknowledged src.bowl]
+    [~ this]
   ==
   ::  Main agent logic
   ++  handle-tick
     |=  count=@ud  ^-  (quip card _this)
+    ?:  =(count 0)
+      ~&  "[%chain %testnet-1 %sect] is brought to you by Red Horizon."  bail
     =/  [=round rem=@]
       ?:  =(count 0)
         [0 0]
@@ -188,37 +197,37 @@ $:  %0
     ::  calculate leader
     =/  leader=node  (snag (mod round (lent robin)) `(list node)`robin)
     ~&  >>>  timer-pinged-at=[count=count height=height.local round=round steppe=steppe]
-    ~&  >  current-time=[m s f]:(yell now.bowl)
-    ~&  >>  nexttimer-at=[m s f]:(yell (add now.bowl delta))  ::  uhm
+    ~&  >  current-time=[h m s]:(yell now.bowl)
+    ::  ~&  >  nexttimer-at=[h m s]:(yell (add now.bowl delta))
+    ~&  >  [height=height.local round=round step=steppe]
     ?-  steppe
         %1
       ~&  >>  leader=leader
       ::  In step 1 only the leader votes
       ?.  .=(our.bowl leader)  bail
-      ::  If we are the leader we look for a qc in our vote store at the current height
-      ::  that is more recent (i.e. same height, higher round OR stage)
-      ::  than our local state qc. If we find one, we vote for that and update our local
+      ::  If we are the leader we look for a qc in our vote store at the 
+      ::  current height  that is more recent than our local state qc. 
+      ::  If we find one, we vote for that and update our local
       ::  bloc and state.
       ::  If not, we propose our current local bloc with txns from our mempool
-      =/  most-recent  (~(most-recent vs:lib vote-store) height.local)
-      ~&  most-recent=most-recent
-      =?  local  ?&(!=(~ most-recent) !=(qc.local u.most-recent))
+      =/  most-recent=(unit qc)
+        (~(most-recent vs:lib vote-store) height.local)
+      ::  ~&  most-recent=most-recent
+      =?  local  ?&(!=(~ most-recent) !=(qc.local (need most-recent)))
         %=  local
-          qc  u.most-recent
-          bloc  bloc.u.most-recent
+          qc  most-recent
+          bloc  bloc:(need most-recent)
         ==
       :_  this
-      %-  broadcast-cards:hd
-      =/  =vote  [bloc.local height.local round %1]
+      :: =/  =vote  [bloc.local height.local round %1]
       :: ~&  >  leader-vote=[bloc.local height=height.local round=round]
-      =/  sig=(set signature)  (silt ~[(sign-vote vote) our.bowl our-life])
-      [vote sig]
+      (vote-and-broadcast [bloc.local height.local round %1])
         ::
         %2
       ::  In step 2 all nodes come to vote.
-      ::  Nodes look for the latest vote by the leader (i.e. what happened on step 1)
-      =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader)
-      ::  If the leader didn't vote on step 1 (which really shouldn't happen!) we bail
+      ::  Nodes look for the latest vote by the leader
+      =/  lbl=(unit qc)  (~(latest-by vs:lib vote-store) leader height.local)
+      ::  If the leader didn't vote on step 1 we bail
       ::  bail meaning incrementing the step and doing nothing
       ?~  lbl  ~&  "no recent vote from leader found"  bail
       ::  We compare the bloc sent by the leader with our local height
@@ -234,24 +243,20 @@ $:  %0
       ?.  received-new
         ~&  "did not receive new bloc from leader"
         bail
-      ::  If we correctly received a new bloc from the leader we save that to local state
+      ::  If we received a new bloc from the leader we save that to local 
       ::  and vote for it
       =.  state
       %=  state
         bloc.local  bloc.u.lbl
-        qc.local     lbl
+        qc.local    ((flit valid:qcu:lib) u.lbl)
       ==
       :_  this
-      =/  =vote
-        %=  vote.lbl
-          round  round
-          stage  %1
-        ==
-      ~&  >>  voting=vote
-      (vote-and-broadcast u.lbl vote)
+      ~&  >>  "voting {<bloc.local>}"
+      (vote-and-broadcast [bloc.local height.local round %1])
         ::
         %3
-      ::  In step 2 we should have received votes from 2/3 of the nodes for some bloc
+      ::  In step 2 we should have received votes from 2/3 of the nodes 
+      ::  for some block.
       ::  in the current height and round, and stage %1. We check for that.
       =/  valid  (~(valid-qcs vs:lib vote-store) height.local round %1)
       ::  If that's not the case we bail
@@ -266,7 +271,7 @@ $:  %0
       :_  this
       =/  vote  [bloc.i.valid height.local round %2]
       ~&  >>  voting=[height.local round %2]
-      (vote-and-broadcast i.valid vote)
+      (vote-and-broadcast vote)
         %4
       ::  addendum must be scheduled on this step
       ::  crashes should be impossible
@@ -288,24 +293,25 @@ $:  %0
       =.  state
       %=  state
         history  (put:hon history height.local valid-qc)
-        mempool.local  (trim-mempool mempool.local txns.bloc.valid-qc)
+        mempool.local  (~(trim mem:lib mempool.local) txns.bloc.valid-qc)
         height.local  +(height.local)
-        bloc.local  [our.bowl (pick-txns-from mempool) now.bowl]
+        bloc.local  [our.bowl ~(pick mem:lib mempool.local) now.bowl]
         qc.local    ~
       ==
       :: :_  increment-step
       :_  this
       :*  addendum-card:hd
           bloc-fact-card:hd
-          (broadcast-cards:hd new-block)
+          (broadcast-cards:hd valid-qc)
       ==
     ==
-++  vote-and-broadcast
-  |=  [p=qc =vote]  ^-  (list card)
-  =/  =signature  (sign-vote vote)
-  %+  turn  `(list @p)`nodes
-  |=  =ship
-  (broadcast-card ship p(quorum (~(put in quorum) signature)))
+  ++  vote-and-broadcast
+    |=  =vote
+    ^-  (list card)
+    ~&  ["vote-and-broadcast" our=our.bowl]
+    =/  =quorum  (~(get ju vote-store) vote)
+    =.  quorum  (~(put by quorum) (sign-vote vote))
+    (broadcast-cards:hd [vote quorum])
   ++  schedule-addendum
     :_  this
     :~  addendum-card:hd
@@ -313,7 +319,12 @@ $:  %0
   ++  bail
     ~&  "bail"
     [~ this]
-  --
+  ++  sign-vote
+    |=  =vote
+    ^-  signature
+    ~&  ["signing" our.bowl our-life]
+    [(sigh:as:keys (jam vote)) our.bowl our-life]
+--
 ++  on-arvo
   |=  [=(pole knot) =sign-arvo]
   ^-  (quip card _this)
@@ -348,7 +359,7 @@ $:  %0
     |-
     ?~  valid  [new-cards this]
     =/  init-txns=(list txn)
-      ?~  t.valid  (pick-txns-from mempool)  ~
+      ?~  t.valid  ~(pick mem:lib mempool.local)  ~
     =/  valid-qc  i.valid
     ~&  >  ~
     ~&  >  bloc-commited=valid-qc
@@ -358,7 +369,7 @@ $:  %0
       height.local   +(height.local)
       bloc.local     [our.bowl init-txns now.bowl]
       qc.local       ~
-      mempool.local  (trim-mempool mempool.local txns.bloc.i.valid)
+      mempool.local  (~(trim mem:lib mempool.local) txns.bloc.i.valid)
       new-cards  (weld new-cards (broadcast-cards:hd i.valid))
       valid  t.valid
     ==
@@ -394,11 +405,12 @@ $:  %0
 ++  pki-leave-card
   [%pass /pki-store %agent [our.bowl %pki-store] %leave ~]
 ++  broadcast-cards
-  |=  p=qc  ^-  (list card)
+  |=  p=[vote quorum]  ^-  (list card)
+  ~&  >>  "broadcasting cards for {<bloc.p>}"
   %+  turn  nodes  |=  s=@p  (broadcast-card p s)
 ++  broadcast-card
-  |=  [p=qc sip=ship]  ^-  card
-  [%pass /wire %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
+  |=  [p=[vote quorum] sip=ship]  ^-  card
+  [%pass /broadcast %agent [sip %clockwork] %poke [%noun !>([%broadcast p])]]
 ++  vote-card
   |=  [s=signature =vote sip=@p]
   =/  p  [vote (silt ~[s])]
@@ -428,37 +440,6 @@ $:  %0
       history
     ::  (lot:hon history `(sub ~(wyt by history) 2) `~(wyt by history))
   [%give %fact ~[/blocs] bloc-update+!>([%blocs update])]
-++  pick-txns-from
-  |=  =mempool
-  ^-  (list txn)
-  ::  number of transactions in a bloc
-  =/  needed  1.024
-  =/  count  0
-  =/  txns=(list txn)  ~
-  |-
-  ?~  mempool  txns
-  ?:  =(count needed)  txns
-  =/  addr=@ux
-    =/  addrs  ~(key by `^mempool`mempool)
-    ?~  addrs  !!
-    -:~(get to addrs)
-  =/  nonces
-    (scag (sub needed count) (sort ~(tap in (~(key bi `^mempool`mempool) addr)) lth))
-  =/  new-txns=(list txn)
-    %+  turn  nonces
-    |=  nonce=@ud
-    (~(got bi `^mempool`mempool) addr nonce)
-  %=  $
-    count    (add count (lent nonces))
-    txns     `(list txn)`(weld new-txns txns)
-    mempool  (~(del by `^mempool`mempool) addr)
-  ==
-++  trim-mempool
-  |=  [=mempool txns=(list txn)]
-  ^-  ^mempool
-  ?~  txns  mempool
-  ?.  ?=(txn-signed:ch i.txns)  $(txns t.txns)
-  $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)
 ++  latest-key
   |=  =ship
   ^-  pass
@@ -466,8 +447,4 @@ $:  %0
   =/  key  (~(get bi pki-store) ship top)
   ?~  key  !!
   u.key
-++  sign-vote
-  |=  =vote
-  ^-  signature
-  [(sigh:as:keys (jam vote)) our.bowl our-life]
 --

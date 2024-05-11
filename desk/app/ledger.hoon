@@ -4,7 +4,7 @@
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [=history:cw =pki-store:pki]
++$  state-0  [%0 =history:cw =pki-store:pki]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -62,10 +62,12 @@
   watch-blocs
 ++  load
   |=  =vase
-  ^+  cor
-  =/  old  !<(state-0 vase)
-  =.  state  old
-  cor
+  ^+  cor  
+  ::  FIXME: same thing in app/chain/hoon
+  init
+  :: =/  old  !<(state-0 vase)
+  :: =.  state  old
+  :: cor
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
@@ -139,7 +141,7 @@
 ++  balance-from-history
   |=  [old=history:cw new=history:cw]
   ^-  balances:lg
-  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw (uni:hon:cw old new))
+  =/  his=(list [@ud qc:cw])  (tap:hon:cw (uni:hon:cw old new))
   =/  =internal-balances:lg  ~
   |-
   ~+

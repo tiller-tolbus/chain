@@ -4,7 +4,7 @@
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [=history:cw =pki-store:pki =wallets:ch =sent-txns:ch]
++$  state-0  [%0 =history:cw =pki-store:pki =wallets:ch =sent-txns:ch]
 +$  card  card:agent:gall
 --
 =|  state-0
@@ -62,10 +62,9 @@
   watch-blocs
 ++  load
   |=  =vase
-  ^+  cor
-  =/  old  !<(state-0 vase)
-  =.  state  old
-  cor
+  ::  FIXME: this nukes everybody whenever the app updates
+  ::  and makes real upgrades impossible
+  ^+  cor  init
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
@@ -221,15 +220,16 @@
   =.  sent-txns  ~
   (give %fact ~[/blocs] bloc-update+!>([%reset ~]))
 ++  verify-bloc
-  |=  [height=@ud =bloc:cw =quorum:cw]
+  |=  [height=@ud =qc:cw]
   ^-  ?
   =-  (gte (lent -) needed-validators)
-  %+  skim  ~(tap in quorum)
+  %+  skim  ~(tap in quorum.qc)
   |=  =signature:cw
-  ?~  (find ~[q.signature] nodes:cw)  %.n
-  =/  vote  [bloc height.bloc round.bloc %2]
+  ?~  (find ~[q.signature] nodes:cw)
+    ~&  "%chain: invalid signature on bloc {<height>}"  %.n
+  =/  =vote:cw  -.qc
   =/  key  (~(get bi pki-store) q.signature r.signature)
-  ?~  key  %.n
+  ?~  key  ~&  "%chain: no key for {<q.signature>}"  %.n
   =/  keys  (com:nu:crub:crypto u.key)
   (safe:as:keys p.signature (jam vote))
 ++  take-pki
@@ -280,7 +280,7 @@
   ^-  @ud
   =/  next  0
   ~+
-  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw history)
+  =/  his=(list [@ud qc:cw])  (tap:hon:cw history)
   |-
   ?~  his  next
   %=  $

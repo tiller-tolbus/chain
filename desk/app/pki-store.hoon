@@ -40,14 +40,16 @@
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  ?>  ?=([%zero *] q.old-state)
-  `this(state !<(state-zero old-state))
+  on-init
+  ::?>  ?=([%zero *] q.old-state)
+  ::`this(state !<(state-zero old-state))
 ::
 ++  on-poke
   |=  [=mark =vase]
   |^
     ^-  (quip card _this)
     ?.  ?=(%noun mark)  `this
+    ::  fixme: security
     ?:  ?=(%set-fake q.vase)
       ~&  >  pki-store-setting-fake=[src.bowl]
       =/  fake-store  populate-fake-store
@@ -87,7 +89,7 @@
 ++  on-leave
   |=  path
   ^-  (quip card _this)
-  !!
+  [~ this]  
 ::
 ++  on-peek
   |=  path
