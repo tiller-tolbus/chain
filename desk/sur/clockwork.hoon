@@ -3,13 +3,14 @@
 +$  signature  [p=@uvH q=ship r=life]
 +$  action
   $%  [%start ts=@da]
-      [%broadcast =qc]
+      [%broadcast [vote quorum]]
       [%txn =txn]
       [%faucet =addr]
       :: [%vote s=signature vote]
   ==
-+$  history  ((mop @ud qc) lth)
-++  hon  ((on @ud qc) lth)
++$  voted-bloc  [vote =quorum]
++$  history  ((mop @ud voted-bloc) lth)
+++  hon      ((on @ud voted-bloc) lth)
 +$  bloc-update
   $%  [%blocs =history]
       [%reset =reset-id]
@@ -23,10 +24,24 @@
       ::  last=quorum
   ==
 ::  address to nonce to transaction
-+$  mempool  (mip @ux @ud txn)
++$  mempool  (mip addr @ud txn)
 ::  for the testnet, transactions are not validated
 ::  and %ledger will ignore invalid ones
-+$  txn  ^
++$  txn
+  $:  signature=@ux
+      txn-unsigned
+  ==
++$  txn-unsigned
+  $:  who=addr
+      nonce=@ud
+      txn-stub
+  ==
+++  txn-stub
+  $:  app=@tas
+      ::  fees are ignored for now
+      fee=@ud
+      cmd=*
+  ==
 :: +$  signed-bloc  (pair signature bloc)
 :: +$  node  $|  @p  |=(p=@p (lte p ~fipfes))
 +$  node  @p
@@ -50,10 +65,11 @@
       referendum
   ==
 :: +$  raw-signed-vote  @
-:: +$  signed-vote  [signature=@ =node =vote]  ::  signatures are a jam of [signed-msg msg] so we can cue the vote out of it
+:: +$  signed-vote  [signature=@ =node =vote]  
+:: ::  signatures are a jam of [signed-msg msg]
 :: +$  signed-vote  signature
 +$  quorum  (set signature)
-+$  qc  [vote =quorum]  :: provisional qc, no guarantees of majority
++$  qc  (unit [vote =quorum])  :: should only be non-null when valid
 +$  vote-store  (jug vote signature)
 ::  constants
 :: ++  nodes  ^-  (lest node)

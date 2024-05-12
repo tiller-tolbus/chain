@@ -2,7 +2,7 @@
 ::
 ::    interface for the %chain testnet
 ::
-/-  ch=chain, lg=ledger
+/-  ch=chain, lg=ledger, cw=clockwork
 /+  default-agent, dbug
 /*  style-css  %css  /lib/style/css
 |%
@@ -69,8 +69,8 @@
 ++  load
   |=  =vase
   ^+  cor
-  =/  old  !<(state-0 vase)
-  =.  state  old
+  ::  =/  old  !<(state-0 vase)
+  ::  =.  state  old
   cor
 ++  wallets
   .^((map cord @ux) %gx /(scot %p our.bowl)/chain/(scot %da now.bowl)/wallets/noun)
@@ -81,13 +81,13 @@
   (~(get by balances) addr)
 ++  transactions
   |=  addr=@ux
-  ^-  (list txn-signed:ch)
-  =/  r  .^((list txn-signed:ch) %gx /(scot %p our.bowl)/chain/(scot %da now.bowl)/transactions/[(scot %ux addr)]/noun)
+  ^-  (list txn:cw)
+  =/  r  .^((list txn:cw) %gx /(scot %p our.bowl)/chain/(scot %da now.bowl)/transactions/[(scot %ux addr)]/noun)
   r
 ++  pending-transactions
   |=  addr=@ux
-  ^-  (list txn-signed:ch)
-  =/  r  .^((list txn-signed:ch) %gx /(scot %p our.bowl)/chain/(scot %da now.bowl)/transactions/[(scot %ux addr)]/pending/noun)
+  ^-  (list txn:cw)
+  =/  r  .^((list txn:cw) %gx /(scot %p our.bowl)/chain/(scot %da now.bowl)/transactions/[(scot %ux addr)]/pending/noun)
   r
 ++  agent
   |=  [=(pole knot) =sign:agent:gall]
@@ -413,9 +413,9 @@
     ;*
     %+  turn
       %+  sort  (transactions addr)
-      |=  [a=txn-signed:ch b=txn-signed:ch]
+      |=  [a=txn:cw b=txn:cw]
       (gth nonce.a nonce.b)
-    |=  txn=txn-signed:ch
+    |=  =txn:cw
     =/  cmd
       %-  ledger-cmd:lg
       cmd.txn

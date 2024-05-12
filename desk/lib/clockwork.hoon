@@ -13,8 +13,10 @@
     |=  ref=referendum
     ^-  (list qc)  ::  there should only be one but w/e
     ~&  checking-qcs=[stage.ref round.ref height.ref]
+    %-  turn  :_  some
+    ^-  (list [vote quorum])
     %+  skim  ~(tap by vote-store)
-    |=  i=qc  ^-  ?
+    |=  i=[vote =quorum]  ^-  ?
     :: ~&  >  qc=[stage.i round.i height.i ~(wyt in +.i)]
     ?&  %+  gte  ~(wyt in quorum.i)  (sm (lent nodes))
         .=(height.ref height.i)
@@ -27,47 +29,56 @@
   ::   |=  i=qc  ^-  ?
   ::   %+  gte  ~(wyt in +.i)  (sm (lent nodes))
   ++  votes-at
-    |=  =height
+    |=  =round
     ^+  vote-store
-    %-  ~(gas by *_vote-store)
-    %+  skim
+    %-  silt  %+  skim
     ~(tap by vote-store)
     |=  [=vote =quorum]
-    =(height height.vote)
+    =(round round.vote)
   ++  most-recent
     |=  =height
-    ^-  (unit qc)
+    ^-  qc
     %+  roll  ~(tap by vote-store)
-    |=  [i=qc acc=(unit qc)]
+    |=  [i=[vote =quorum] acc=qc]
     ?.  =(height height.i)  acc
-    ?.  (valid:qcu i)  acc
-    ?~  acc  (some i)
-    ?:  (more-recent:qcu i u.acc)  (some i)  acc
+    =/  =qc  (certify:qcu i)
+    ?:((more-recent:qcu qc acc) qc acc)
   ++  latest-by
-    |=  [leader=node =height]
+    |=  [leader=node =round]
     :: ~&  vote-store
-    ^-  (unit qc)
-    %+  roll  ~(tap by (votes-at height))
-    |=  [i=qc acc=(unit qc)]
-    ::  ~&  "lbl: checking vote store"
-    ?~  (skim ~(tap in quorum.i) |=(sig=signature =(q.sig leader)))
-      acc
-    :: ~&  "lbl: checking acc"
-    ?~  acc  (some i)
-    :: ~&  "lbl: checking recency"
-    ?:  (more-recent:qcu i u.acc)  (some i)  acc
+    ^-  (set [vote quorum])
+    ::  we would like to know if the leader voted this round
+    %-  silt
+    %+  skim
+      ~(tap by (votes-at round))
+    |=  [vote =quorum]
+    %-  ~(any in quorum)
+    |=  sig=signature
+    =(q.sig leader)
+    ::
+    :: %+  roll  ~(tap by (votes-at height))
+    :: |=  [i=[vote =quorum] acc=(unit [vote quorum])]
+    :: ::  ~&  "lbl: checking vote store"
+    :: ?~  (skim ~(tap in quorum.i) |=(sig=signature =(q.sig leader)))
+    ::   acc
+    :: :: ~&  "lbl: checking acc"
+    :: ?~  acc  (some i)
+    :: :: ~&  "lbl: checking recency"
+    :: ?:  (more-recent:qcu i u.acc)  (some i)  acc
   ::
   ++  future-blocs
     |=  =height
-    ^-  (list qc)
-    %+  sort
+    ^-  (list [vote quorum])
+    %-  sort  :_
+      |=  [a=[vote quorum] b=[vote quorum]]
+      (lth height.a height.b)
+    %-  murn  :_  certify:qcu
     %+  skim  ~(tap by vote-store)
-    |=  i=qc  ^-  ?
+    |=  i=[vote =quorum]  ^-  ?
     ?&  %+  gte  ~(wyt in quorum.i)  (sm (lent nodes))
         (gte height.i height)
         .=(%2 stage.i)
     ==
-    |=  [a=qc b=qc]  (lth height.a height.b)
   --
 ::  qcu: qc utilities
 ++  qcu
@@ -76,21 +87,34 @@
     |=  [a=qc b=qc]
     ^-  ?
     ::  ~?  !=(height.a height.b)  "as-recent: heights unequal"
-    ?:  (gte round.a round.b)  %.y
-    ?&  .=(round.a round.b)
-        (gte stage.a stage.b)
+    ?~  a  !(valid b)
+    ?~  b  (valid a)
+    ?:  (gte round.u.a round.u.b)  %.y
+    ?&  .=(round.u.a round.u.b)
+        (gte stage.u.a stage.u.b)
     ==
   ++  more-recent
     |=  [a=qc b=qc]
     ^-  ?
     ::  ~?  !=(height.a height.b)  "more-recent: heights unequal"
-    ?:  (gth round.a round.b)  %.y
-    ?&  .=(round.a round.b)
-        (gth stage.a stage.b)
+    ?~  a  %.n
+    ?~  b  (valid a)
+    ?:  (gth round.u.a round.u.b)  %.y
+    ?&  .=(round.u.a round.u.b)
+        (gth stage.u.a stage.u.b)
     ==
   ++  valid
     |=  =qc  ^-  ?
-    %+  gte  ~(wyt in quorum.qc)  (sm (lent nodes))  
+    ?~  qc  %.n
+    (gte ~(wyt in quorum.u.qc) (sm (lent nodes)))
+  ++  certify
+    ::  returns a qc if i is valid
+    ::  null otherwise
+    |=  i=[vote =quorum]
+    ^-  qc
+    ?.  (valid (some i))
+      ~
+    (some i)
   --
 ::  mempool
 ++  mem
@@ -125,8 +149,6 @@
     |=  txns=(list txn)
     ^+  mempool
     ?~  txns  mempool
-    =/  shape  ,[who=@ux nonce=@ud @ @ @ *]
-    ?.  ?=(shape i.txns)  $(txns t.txns)
     $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)
   --
 --

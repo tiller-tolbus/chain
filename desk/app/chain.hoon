@@ -78,7 +78,7 @@
       [%x %transactions adr=@t ~]
     =/  addr  (slav %ux adr.pole)
     =-  ``transactions+!>(~(tap in -))
-    ^-  (set txn-signed:ch)
+    ^-  (set txn:cw)
     =/  nonces  (~(key bi sent-txns) addr)
     %-  ~(run in nonces)
     |=  nonce=@ud
@@ -87,7 +87,7 @@
     =/  addr  (slav %ux adr.pole)
     =/  wallet-txns
       =-  ~(tap in -)
-      ^-  (set txn-signed:ch)
+      ^-  (set txn:cw)
       =/  nonces  (~(key bi sent-txns) addr)
       %-  ~(run in nonces)
       |=  nonce=@ud
@@ -95,8 +95,8 @@
     =/  com  (committed-nonce addr)
     =-  ``transactions+!>(-)
     %+  skim  wallet-txns
-    |=  =txn-signed:ch
-    (gte nonce.txn-signed com)
+    |=  =txn:cw
+    (gte nonce.txn com)
   ==
 ++  watch
   |=  =(pole knot)
@@ -167,35 +167,38 @@
     =+  !<([name=cord target=addr:ch amount=@ud] vase)
     =/  =wallet:ch  (~(got by wallets) name)
     =/  keys  (nol:nu:crub:crypto sec.wallet)
-    =/  =txn-unsigned:ch
+    =/  =txn-unsigned:cw
       :*  pub.wallet
           (nonce pub.wallet)
           [%ledger 0 [%send target amount]]
       ==
-    =/  =txn-signed:ch
+    =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns  (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn-signed)
+    =.  sent-txns  
+      (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
     |=  who=ship
-    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
+    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn])]
+    ::
       %send-txn
     ?>  =(src.bowl our.bowl)
-    =+  !<([name=cord =txn-stub:ch] vase)
+    =+  !<([name=cord =txn-stub:cw] vase)
     =/  =wallet:ch  (~(got by wallets) name)
     =/  keys  (nol:nu:crub:crypto sec.wallet)
-    =/  =txn-unsigned:ch
+    =/  =txn-unsigned:cw
       :*  pub.wallet
           (nonce pub.wallet)
           txn-stub
       ==
-    =/  =txn-signed:ch
+    =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns  (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn-signed)
+    =.  sent-txns  
+      (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
     |=  who=ship
-    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn-signed])]
+    [%pass /send-txn %agent [who %clockwork] %poke noun+!>([%txn txn])]
       %ask-faucet
     ?>  =(src.bowl our.bowl)
     =+  !<(name=cord vase)
@@ -210,6 +213,7 @@
     take-reset
       %blocs
     ?.  (all:hon:cw history.update verify-bloc)  cor
+    ::  todo: make sure blocks are contiguous
     =.  history  (uni:hon:cw history history.update)
     (give %fact ~[/blocs] bloc-update+!>([%blocs history.update]))
   ==
@@ -220,14 +224,13 @@
   =.  sent-txns  ~
   (give %fact ~[/blocs] bloc-update+!>([%reset ~]))
 ++  verify-bloc
-  |=  [height=@ud =qc:cw]
+  |=  [height=@ud [=vote:cw =quorum:cw]]
   ^-  ?
   =-  (gte (lent -) needed-validators)
-  %+  skim  ~(tap in quorum.qc)
+  %+  skim  ~(tap in quorum)
   |=  =signature:cw
   ?~  (find ~[q.signature] nodes:cw)
     ~&  "%chain: invalid signature on bloc {<height>}"  %.n
-  =/  =vote:cw  -.qc
   =/  key  (~(get bi pki-store) q.signature r.signature)
   ?~  key  ~&  "%chain: no key for {<q.signature>}"  %.n
   =/  keys  (com:nu:crub:crypto u.key)
@@ -280,7 +283,7 @@
   ^-  @ud
   =/  next  0
   ~+
-  =/  his=(list [@ud qc:cw])  (tap:hon:cw history)
+  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw history)
   |-
   ?~  his  next
   %=  $
@@ -292,7 +295,7 @@
     |=  [txn=* n=@ud]
     ^-  [* @ud]
     ::  is it structured like a transaction?
-    ?.  ?=(txn-signed:ch txn)  [txn next]
+    ?.  ?=(txn:cw txn)  [txn next]
     ::  is it from this wallet?
     ?.  =(who.txn addr)  [txn next]
     ::  is it signed correctly?

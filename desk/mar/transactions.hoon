@@ -1,5 +1,5 @@
-/-  ch=chain
-|_  transactions=(list txn-signed:ch)
+/-  cw=clockwork
+|_  transactions=(list txn:cw)
 ++  grad  %noun
 ++  grow
   |%
@@ -7,6 +7,6 @@
   --
 ++  grab
   |%
-  ++  noun  (list txn-signed:ch)
+  ++  noun  (list txn:cw)
   --
 --
