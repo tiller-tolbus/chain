@@ -310,7 +310,7 @@ $:  %0
     ^-  (list card)
     ~&  ["vote-and-broadcast" our=our.bowl]
     =/  =quorum  (~(get ju vote-store) vote)
-    =.  quorum  (~(put by quorum) (sign-vote vote))
+    =.  quorum  (~(put in quorum) (sign-vote vote))
     (broadcast-cards:hd [vote quorum])
   ++  schedule-addendum
     :_  this

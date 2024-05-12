@@ -2,6 +2,7 @@
 |%
 ++  addr  @ux
 ++  sent-txns  (mip addr @ud txn-signed)
+::  [@ @ @ @ @ *]
 ++  txn-signed
   $:  signature=@ux
       txn-unsigned

@@ -26,6 +26,14 @@
   ::   %+  skim  ~(tap by vote-store)
   ::   |=  i=qc  ^-  ?
   ::   %+  gte  ~(wyt in +.i)  (sm (lent nodes))
+  ++  votes-at
+    |=  =height
+    ^+  vote-store
+    %-  ~(gas by *_vote-store)
+    %+  skim
+    ~(tap by vote-store)
+    |=  [=vote =quorum]
+    =(height height.vote)
   ++  most-recent
     |=  =height
     ^-  (unit qc)
@@ -36,20 +44,17 @@
     ?~  acc  (some i)
     ?:  (more-recent:qcu i u.acc)  (some i)  acc
   ++  latest-by
-    |=  leader=node
+    |=  [leader=node =height]
     :: ~&  vote-store
     ^-  (unit qc)
-    %+  roll  ~(tap by vote-store)
+    %+  roll  ~(tap by (votes-at height))
     |=  [i=qc acc=(unit qc)]
-    ::  ~&  "checking mint"
-    ?~  %+  skim  ~(tap in quorum.i)  |=(sig=signature =(q.sig leader))
+    ::  ~&  "lbl: checking vote store"
+    ?~  (skim ~(tap in quorum.i) |=(sig=signature =(q.sig leader)))
       acc
-    :: ~&  "checking height"
-    :: ~&  [our-height=height their-height=height.i]
-    ::  ?.  =(height height.i)  acc
-    :: ~&  "checking acc"
+    :: ~&  "lbl: checking acc"
     ?~  acc  (some i)
-    :: ~&  "checking recency"
+    :: ~&  "lbl: checking recency"
     ?:  (more-recent:qcu i u.acc)  (some i)  acc
   ::
   ++  future-blocs
@@ -70,7 +75,7 @@
   ++  as-recent
     |=  [a=qc b=qc]
     ^-  ?
-    ~?  !=(height.a height.b)  "as-recent: heights unequal"
+    ::  ~?  !=(height.a height.b)  "as-recent: heights unequal"
     ?:  (gte round.a round.b)  %.y
     ?&  .=(round.a round.b)
         (gte stage.a stage.b)
@@ -78,13 +83,50 @@
   ++  more-recent
     |=  [a=qc b=qc]
     ^-  ?
-    ~?  !=(height.a height.b)  "more-recent: heights unequal"
+    ::  ~?  !=(height.a height.b)  "more-recent: heights unequal"
     ?:  (gth round.a round.b)  %.y
     ?&  .=(round.a round.b)
         (gth stage.a stage.b)
     ==
   ++  valid
     |=  =qc  ^-  ?
-    %+  gte  ~(wyt in quorum.qc)  (sm (lent nodes))
+    %+  gte  ~(wyt in quorum.qc)  (sm (lent nodes))  
+  --
+::  mempool
+++  mem
+  |_  =mempool
+  ++  pick
+    ^-  (list txn)
+    ::  number of transactions in a bloc
+    =/  needed  1.024
+    =/  count  0
+    =/  txns=(list txn)  ~
+    |-
+    ?~  mempool  txns
+    ?:  =(count needed)  txns
+    =/  addr=@ux
+      =/  addrs  ~(key by `^mempool`mempool)
+      ?~  addrs  !!
+      -:~(get to addrs)
+    =/  nonces
+      %+  scag 
+        (sub needed count) 
+      (sort ~(tap in (~(key bi `^mempool`mempool) addr)) lth)
+    =/  new-txns=(list txn)
+      %+  turn  nonces
+      |=  nonce=@ud
+      (~(got bi `^mempool`mempool) addr nonce)
+    %=  $
+      count    (add count (lent nonces))
+      txns     `(list txn)`(weld new-txns txns)
+      mempool  (~(del by `^mempool`mempool) addr)
+    ==
+  ++  trim
+    |=  txns=(list txn)
+    ^+  mempool
+    ?~  txns  mempool
+    =/  shape  ,[who=@ux nonce=@ud @ @ @ *]
+    ?.  ?=(shape i.txns)  $(txns t.txns)
+    $(mempool (~(del bi mempool) who.i.txns nonce.i.txns), txns t.txns)
   --
 --
