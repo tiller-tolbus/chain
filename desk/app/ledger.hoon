@@ -62,7 +62,7 @@
   watch-blocs
 ++  load
   |=  =vase
-  ^+  cor  
+  ^+  cor
   ::  FIXME: same thing in app/chain/hoon
   init
   :: =/  old  !<(state-0 vase)
@@ -131,7 +131,7 @@
       %reset
     take-reset
       %blocs
-    =.  history  (~(uni by history) history.update)
+    =.  history  (uni:hon:cw history history.update)
     (give %fact ~[/balances] balances+!>((balance-from-history history history.update)))
   ==
 ++  take-reset
@@ -141,7 +141,7 @@
 ++  balance-from-history
   |=  [old=history:cw new=history:cw]
   ^-  balances:lg
-  =/  his=(list [@ud voted-bloc:cw])  ~(tap by (~(uni by old) new))
+  =/  his=(list [@ud voted-bloc:cw])  (tap:hon:cw (uni:hon:cw old new))
   =/  =internal-balances:lg  ~
   |-
   ~+
@@ -154,9 +154,6 @@
       internal-balances
     |=  [=txn:cw br=(map addr:ch [balance=@ud nonce=@ud faucet=?])]
     ^-  [* (map @ux [@ud @ud ?])]
-    ::  is it structured like a transaction?
-    ::?.  ?=(txn:cw txn)  [txn br]
-    ::  is it signed correctly?
     =/  keys  (com:nu:crub:crypto who.txn)
     ?.  (safe:as:keys -.txn (jam +.txn))  [txn br]
     ::  is the nonce sequential?
