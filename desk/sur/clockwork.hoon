@@ -65,7 +65,7 @@
       referendum
   ==
 :: +$  raw-signed-vote  @
-:: +$  signed-vote  [signature=@ =node =vote]  
+:: +$  signed-vote  [signature=@ =node =vote]
 :: ::  signatures are a jam of [signed-msg msg]
 :: +$  signed-vote  signature
 +$  quorum  (set signature)
@@ -106,9 +106,41 @@
 ::   ==
 :: ++  primary  ~woldeg
 :: fake constants
+::  ++  nodes  ^-  (lest node)
+::    ~[~zod ~nec ~bud ~wes]
 ++  nodes  ^-  (lest node)
-  ~[~zod ~nec ~bud ~wes]
-++  primary  ~zod
+  :~  ~winsyr-mopnym
+      ~tarnyx-pitmes
+      ~fillep-taspex
+      ~tiphut-lapwyn
+      ~rapred-ladrud
+      ~formut-lactyc
+      ~bilwyt-linseg
+      ~haptyl-maphul
+      ~difwyt-roclup
+      ~mostuc-botrem
+      ~rinteb-migpyx
+      ~bidfyl-paghex
+      ~magmyr-rivdes
+      ~tanlec-tacfyr
+      ~linryp-digrel
+      ~walteg-tolfex
+      ~dotwet-hodsed
+      ~sictyv-balnyd
+      ~tinmex-fillen
+      ~wormur-paghet
+      ~fodsyn-dintun
+      ~polseg-silfer
+      ~fadsef-rapwel
+      ~ritpen-hilteg
+      ~mopnum-dalryt
+      ~difmeg-ravnus
+      ~namdev-mocwyn
+      ~bicwep-faswes
+      ~witryg-dinrec
+      ~savsud-figrep
+  ==
+++  primary  ~winsyr-mopnym
 ::
 +$  addr  @ux
 ::  functions
