@@ -55,9 +55,13 @@ $:  %0
 ++  on-load
   |=  old-state=vase
   ::  dev
-  on-init
+  :::-  :~  ::
+   ::
+    ::[%pass /pki-store %agent [our.bowl %pki-store] %leave ~]
+    ::[%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
+  ::==  this
  ::  prod
-    :: :-  ~  this(state !<(state-0 old-state))
+     :-  ~  this(state !<(state-0 old-state))
 ::
 ++  on-watch
   |=  =(pole knot)
@@ -68,7 +72,7 @@ $:  %0
   ==
 ++  on-poke
   |=  [=mark =vase]
-  ~&  ["++on-poke from" src.bowl]
+  ::~&  ["++on-poke from" src.bowl]
   |^
   :: check various conditions for testing
   ?.  ?=(%noun mark)  [~ this]
@@ -156,7 +160,12 @@ $:  %0
     =.  faucet-nonce  +(faucet-nonce)
     :_  this  (txn-gossip-cards txn)
   --
-++  on-peek   |=(=(pole knot) ~)
+++  on-peek   
+  |=  =(pole knot)
+  ^-  (unit (unit cage))
+  ?+  pole  ~&  %clockwork-bad-scry  !!
+    [%x %vote-store ~]  ``[%noun !>(vote-store)]
+  ==
 ++  on-agent
   |=  [=(pole knot) =sign:agent:gall]
   |^
@@ -246,7 +255,9 @@ $:  %0
       ::  check to see if the leader sent us a more recent QC
       ::  if their QC is null, we accept their block
       =/  received-new=?
-        (as-recent:qcu:lib (certify:qcu:lib lbl) qc.local)
+        ?|  =(bloc.local bloc.lbl)
+          (as-recent:qcu:lib (certify:qcu:lib lbl) qc.local)
+        ==
       ?.  received-new
         ~&  "vote from leader less recent than local"  bail
       =?  local  received-new
@@ -327,7 +338,7 @@ $:  %0
     :~  addendum-card:hd
     ==
   ++  bail
-    ~&  "bail"
+    ~&  "skipping step"
     [~ this]
   ++  sign-vote
     |=  =vote
@@ -361,7 +372,7 @@ $:  %0
     ~&  >>  addendum-phase=[m s f]:(yell now.bowl)
     ^-  (quip card _this)
     ::  In the addendum stage we look in our vote store for valid
-    ::  qcs of stage %2 of a height greater than our local height
+    ::  qcs of stage %2 of a height >= our local height
     =/  valid=(list [vote quorum])
       (~(future-blocs vs:lib vote-store) height.local)
     ::  We then iterate through them and do what we did in step %4;
@@ -375,7 +386,7 @@ $:  %0
       ?~  t.valid  ~(pick mem:lib mempool.local)  ~
     ::
     =/  new=[vote =quorum]  i.valid
-    ?:  =(height.new height.local)
+    ?:  (gth height.new height.local)
       ~&  >>>  "missing block at height {<height.local>}"  $(valid t.valid)
     ?:  (has:hon history height.new)
       ~&  >>>  "duplicate block at height {<height.new>}"  $(valid t.valid)
@@ -415,13 +426,15 @@ $:  %0
 ++  pki-cards
   ^-  (list card)
   :~  [%pass /private-keys %arvo %j %private-keys ~]
-      pki-watch-card
+      pki-remind-card
   ==
 ++  pki-watch-card
   ::  subscribe to pki-store updates
   [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
 ++  pki-leave-card
   [%pass /pki-store %agent [our.bowl %pki-store] %leave ~]
+++  pki-remind-card
+  [%pass /pki-store %agent [our.bowl %pki-store] %poke %noun !>(%remind)]
 ++  broadcast-cards
   |=  p=[vote quorum]  ^-  (list card)
   ::~&  >>  "broadcasting cards for {<bloc.p>}"

@@ -64,7 +64,12 @@
   |=  =vase
   ^+  cor
   ::  FIXME: same thing in app/chain/hoon
-  init
+  ::  init
+  ::
+  =.  cor
+  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %leave ~)
+  ::(emit %pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs)
+  cor
   :: =/  old  !<(state-0 vase)
   :: =.  state  old
   :: cor
@@ -188,14 +193,12 @@
   (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  watch-blocs
   (emit %pass /blocs %agent [our.bowl %chain] %watch /blocs)
-++  node-keys  (turn nodes:cw latest-key)
+++  node-keys  (murn nodes:cw latest-key)
 ++  latest-key
   |=  =ship
-  ^-  pass
+  ^-  (unit pass)
   =/  top  (~(rep in (~(key bi pki-store) ship)) max)
-  =/  key  (~(get bi pki-store) ship top)
-  ?~  key  !!
-  u.key
+  (~(get bi pki-store) ship top)
 ++  prior-balance
   |=  [ib=internal-balances:lg =addr:ch]
   ?~  (find ~[addr] node-keys)

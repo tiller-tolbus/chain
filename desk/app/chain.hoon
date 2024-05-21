@@ -64,7 +64,11 @@
   |=  =vase
   ::  FIXME: this nukes everybody whenever the app updates
   ::  and makes real upgrades impossible
-  ^+  cor  init
+  ::  
+  ::  ^+  cor  init
+  ::=/  old  !<(state-0 vase)
+  ::=.  state  old
+  cor
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))

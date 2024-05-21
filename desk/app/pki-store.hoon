@@ -40,16 +40,22 @@
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  on-init
+  :_  this(state !<(state-zero old-state))
+  ^-  (list card)
+  :~  [%pass /pki-store %agent [our.bowl %azimuth] %watch /event]
+  ==
+  ::on-init
+  ::
   ::?>  ?=([%zero *] q.old-state)
   ::`this(state !<(state-zero old-state))
 ::
 ++  on-poke
   |=  [=mark =vase]
+  ~&  %pki-store-poked
+  ?>  =(src.bowl our.bowl)
   |^
     ^-  (quip card _this)
-    ?.  ?=(%noun mark)  `this
-    ::  fixme: security
+    ?.  ?=(%noun mark)  ~&  %bad-poke  `this
     ?:  ?=(%set-fake q.vase)
       ~&  >  pki-store-setting-fake=[src.bowl]
       =/  fake-store  populate-fake-store
@@ -59,6 +65,11 @@
           ==
       :~  [%pass /pki-store %agent [our.bowl %azimuth] %leave ~]
           [%give %fact ~[/pki-diffs] %pki-snapshot !>(fake-store)]
+      ==
+    ?:  ?=(%remind q.vase)
+      ?>  =(src.bowl our.bowl)
+      :_  this
+      :~  [%give %fact ~[/pki-diffs] %pki-snapshot !>(pki-store)]
       ==
     `this
     ++  populate-fake-store  ^+  pki-store
