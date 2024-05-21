@@ -42,7 +42,7 @@ $:  %0
     :-  clockstep-watch-card:hd
     ::  dev
     ::  :-  fake-pki-card:hd
-      pki-cards:hd
+      [pki-watch-card:hd pki-cards:hd]
 ::
 ++  on-leave
   |=  =path
@@ -91,7 +91,7 @@ $:  %0
       ~&  >>  history=history
       =.  state  *state-0
       ::  :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
-      :_  this(robin nodes)  [stop-card:hd pki-cards:hd]
+      :_  this(robin nodes)  [stop-card:hd pki-watch-card:hd pki-cards:hd]
     ::  todo pause poke?
     ::  actual checks
     ::  throw away unrecognized pokes
@@ -160,7 +160,7 @@ $:  %0
     =.  faucet-nonce  +(faucet-nonce)
     :_  this  (txn-gossip-cards txn)
   --
-++  on-peek   
+++  on-peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?+  pole  ~&  %clockwork-bad-scry  !!
