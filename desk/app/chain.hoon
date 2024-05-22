@@ -279,7 +279,7 @@
     vals
   =^  next  rng  (rads:rng (lent nods))
   $(vals [(snag next nods) vals], nods (oust [next 1] nods))
-++  needed-validators  +((div (lent nodes:cw) 3))
+++  needed-validators  +((div (mul 2 (lent nodes:cw)) 3))
 ++  latest-key
   |=  =ship
   ^-  pass
