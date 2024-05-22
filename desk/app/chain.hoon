@@ -64,11 +64,21 @@
   |=  =vase
   ::  FIXME: this nukes everybody whenever the app updates
   ::  and makes real upgrades impossible
-  ::  
+  ::
   ::  ^+  cor  init
   ::=/  old  !<(state-0 vase)
   ::=.  state  old
-  cor
+  =/  leave-wrong-blocs
+    %+  murn  ~(tap in ~(key by wex.bowl))
+    |=  [=wire =ship =term]
+    ^-  (unit card)
+    ?.  =(term %clockwork)  ~
+    ?~  (find ~[ship] nodes:cw)
+      `[%pass /blocs %agent [ship %clockwork] %leave ~]
+    ~
+  ?~  leave-wrong-blocs  cor
+  =.  cor  watch-blocs
+  (emil leave-wrong-blocs)
 ++  peek
   |=  =(pole knot)
   ^-  (unit (unit cage))
@@ -178,7 +188,7 @@
       ==
     =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns  
+    =.  sent-txns
       (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
@@ -197,7 +207,7 @@
       ==
     =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns  
+    =.  sent-txns
       (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
