@@ -62,10 +62,7 @@
   watch-blocs
 ++  load
   |=  =vase
-  ::  FIXME: this nukes everybody whenever the app updates
-  ::  and makes real upgrades impossible
-  ::
-  ::  ^+  cor  init
+  ^+  cor
   ::=/  old  !<(state-0 vase)
   ::=.  state  old
   =/  leave-wrong-blocs
@@ -77,6 +74,7 @@
       `[%pass /blocs %agent [ship %clockwork] %leave ~]
     ~
   ?~  leave-wrong-blocs  cor
+  =.  state  !<(state-0 vase)
   =.  cor  watch-blocs
   (emil leave-wrong-blocs)
 ++  peek
@@ -126,7 +124,9 @@
   ?+  pole  ~|(bad-agent-wire+pole !!)
       [%blocs ~]
     ?+  -.sign  !!
-        %kick  watch-blocs
+        %kick  ::  watch-blocs 
+      ?>  =([%blocs]~ pole)
+      (resub-blocs src.bowl)
         %watch-ack
       ?~  p.sign
         cor
@@ -188,7 +188,7 @@
       ==
     =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns
+    =.  sent-txns  
       (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
@@ -207,7 +207,7 @@
       ==
     =/  =txn:cw
       [(sigh:as:keys (jam txn-unsigned)) txn-unsigned]
-    =.  sent-txns
+    =.  sent-txns  
       (~(put bi sent-txns) pub.wallet (nonce pub.wallet) txn)
     %-  emil
     %+  turn  validators
@@ -264,6 +264,10 @@
   %+  turn  validators
   |=  who=ship
   [%pass /blocs %agent [who %clockwork] %watch /blocs]
+++  resub-blocs
+  |=  who=ship
+  %-  emit
+  [%pass /blocs %agent [who %clockwork] %watch /blocs]
 ++  validators
   ^-  (list ship)
   ~+
@@ -279,7 +283,7 @@
     vals
   =^  next  rng  (rads:rng (lent nods))
   $(vals [(snag next nods) vals], nods (oust [next 1] nods))
-++  needed-validators  +((div (mul 2 (lent nodes:cw)) 3))
+++  needed-validators  +((div (lent nodes:cw) 3))
 ++  latest-key
   |=  =ship
   ^-  pass

@@ -66,9 +66,9 @@
   ::  FIXME: same thing in app/chain/hoon
   ::  init
   ::
-  =.  cor
-  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %leave ~)
-  ::(emit %pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs)
+  ::=.  cor
+  ::(emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
+  =.  state  !<(state-0 vase)
   cor
   :: =/  old  !<(state-0 vase)
   :: =.  state  old

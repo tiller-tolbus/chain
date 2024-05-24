@@ -1,9 +1,10 @@
-:~  title+'%chain'
-    info+'An Urbit-native L1 blockchain that implements a cryptocurrency $TOKEN.'
-    color+0x44ff
-    image+''
-    version+[0 0 1]
-    website+'https://urbit.org/'
-    license+'MIT'
-    site+/apps/chain
+:~
+  title+'%chain'
+  info+'An Urbit-native L1 blockchain that implements a cryptocurrency $TOKEN.'
+  color+0x44ff
+  version+[0 0 1]
+  website+'https://urbit.org/'
+  license+'MIT'
+  image+''
+  site+/apps/chain
 ==

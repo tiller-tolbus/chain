@@ -58,7 +58,8 @@
 +$  steppe  $~(%1 $?(%1 %2 %3 %4))  :: stage of the app, see above
 +$  stage  $?(%2 %1)  :: voting stage
 ++  delta  ~s16  :: time between steps
-++  addendum-delta  ~s8
+++  max-tx  (bex 16)
+++  addendum-delta  (div delta 4)
 +$  referendum  [=height =round =stage]
 +$  vote
   $:  =bloc
@@ -147,7 +148,7 @@
 ::
 ::  V0.1
 ++  nodes  ^-  (lest node)
-  :~  ~samheb-loslyn
+  :~  ::~samheb-loslyn
     ~sapdux-rovler
     ~natmut-digseb
     ~raclud-siclep
@@ -169,16 +170,16 @@
     ~livdep-fanlud
     ~rigmet-falsyd
     ~nammud-ritdur
-    ~lattug-rabtug
+    ::~lattug-rabtug
     ~mocnec-hodseb
-    ~magmeg-ropder
+    ::~magmeg-ropder
     ~hopryd-dartyl
     ~falseg-monsec
     ~divbyn-fipfur
     ~nocdev-folsud
     ~riblup-fopsum
   ==
-++  primary  ~samheb-loslyn
+++  primary  ~sapdux-rovler
 ::
 +$  addr  @ux
 ::  functions

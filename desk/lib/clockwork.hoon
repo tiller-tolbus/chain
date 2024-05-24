@@ -9,6 +9,13 @@
 ::  vs: vote-store utilities
 ++  vs
   |_  =vote-store
+  ++  prune
+    |=  =height
+    ^+  vote-store
+    %-  ~(gas by *^vote-store)
+    %+  skip  ~(tap by vote-store)
+    |=  [=vote quorum]
+    (lte height.vote height)
   ++  valid-qcs
     |=  ref=referendum
     ^-  (list qc)  ::  there should only be one but w/e
