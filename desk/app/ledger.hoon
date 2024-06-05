@@ -137,7 +137,13 @@
     take-reset
       %blocs
     =.  history  (uni:hon:cw history history.update)
-    (give %fact ~[/balances] balances+!>((balance-from-history history history.update)))
+    =/  bal  (balance-from-history history history.update)
+    (give [%fact ~[/balances] balances+!>(bal)])
+      %remind
+    =.  history  (uni:hon:cw history history.update)
+    =/  bal  (balance-from-history history history.update)
+    =.  cor  (give [%fact ~[/balances] balances+!>(bal)])
+    cor
   ==
 ++  take-reset
   ^+  cor
@@ -190,7 +196,7 @@
   ^+  cor
   cor(pki-store (~(put bi pki-store) ship.p life.p pass.p))
 ++  watch-pki
-  (emit %pass /pki-diffs %agent [our.bowl %pki-store] %watch /pki-diffs)
+  (emit %pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs)
 ++  watch-blocs
   (emit %pass /blocs %agent [our.bowl %chain] %watch /blocs)
 ++  node-keys  (murn nodes:cw latest-key)

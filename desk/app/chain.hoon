@@ -63,8 +63,7 @@
 ++  load
   |=  =vase
   ^+  cor
-  ::=/  old  !<(state-0 vase)
-  ::=.  state  old
+  =.  cor  cor(state !<(state-0 vase))
   =/  leave-wrong-blocs
     %+  murn  ~(tap in ~(key by wex.bowl))
     |=  [=wire =ship =term]
@@ -74,7 +73,6 @@
       `[%pass /blocs %agent [ship %clockwork] %leave ~]
     ~
   ?~  leave-wrong-blocs  cor
-  =.  state  !<(state-0 vase)
   =.  cor  watch-blocs
   (emil leave-wrong-blocs)
 ++  peek
@@ -134,6 +132,11 @@
         %fact
       (take-update !<(bloc-update:cw q.cage.sign))
     ==
+      [%remind ~]
+    ?+  -.sign  !!
+      %poke-ack
+       cor 
+      ==
       [%pki-diffs ~]
     ?+  -.sign  !!
         %kick  watch-pki
@@ -230,6 +233,14 @@
     ::  todo: make sure blocks are contiguous
     =.  history  (uni:hon:cw history history.update)
     (give %fact ~[/blocs] bloc-update+!>([%blocs history.update]))
+      %remind
+    ?>  =(src.bowl primary:cw)
+    ::?.  (all:hon:cw history.update verify-bloc)
+    ::  see above
+    =.  history  (uni:hon:cw history history.update)
+    =.  cor  (give %fact ~[/blocs] bloc-update+!>([%remind history.update]))
+    =.  cor  (emit [%pass /remind %agent [our.bowl %pki-store] %poke %noun !>(%remind)])
+    cor
   ==
 ++  take-reset
   ^+  cor

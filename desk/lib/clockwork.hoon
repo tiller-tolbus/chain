@@ -128,12 +128,31 @@
   |_  =mempool
   ++  pick
     ^-  (list txn)
+    ::=/  memstream=(list txn)  
+    :: ::  todo: sort by fee
+    :: %+  turn  ~(tap bi mempool)
+    :: |=  [* * =txn]  txn
+    ::=|  txns=(list txn)
+    ::::  if mempool is smaller than max, return entire mempool
+    ::?:  (gth max-bloc (met 3 (jam memstream)))  txns
+    ::::  otherwise, loop
+    ::|-
+    ::::  if nothing left, finish
+    ::?~  memstream  txns
+    ::::  if over limit, revert to last
+    ::?:  (gth (met 3 (jam txns)) max-bloc)  
+    ::  ?~(txns !! t.txns)  :: it won't crash because it's big
+    ::::  else, process one tx
+    ::=/  =txn  i.memstream
+    ::%=  $
+    ::  txns  :-(txn txns)
+    ::  memstream  t.memstream
+    ::==
     ::  number of transactions in a bloc
-    =/  needed  1.024
+    =|  txns=(list txn)
+    =/  needed  (bex 4)
     =/  count  0
-    =/  txns=(list txn)  ~
     |-
-    ?~  mempool  txns
     ?:  =(count needed)  txns
     =/  addr=@ux
       =/  addrs  ~(key by `^mempool`mempool)

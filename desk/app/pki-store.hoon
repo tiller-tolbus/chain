@@ -67,7 +67,7 @@
           [%give %fact ~[/pki-diffs] %pki-snapshot !>(fake-store)]
       ==
     ?:  ?=(%remind q.vase)
-      ?>  =(src.bowl our.bowl)
+      ::?>  =(src.bowl our.bowl)
       :_  this
       :~  [%give %fact ~[/pki-diffs] %pki-snapshot !>(pki-store)]
       ==
@@ -112,7 +112,7 @@
   ~>  %bout.[0 '%pki-store %on-agent']
   ~&  pki-store=[wire -.sign]
   ^-  (quip card _this)
-  ?.  ?=([%pki-store ~] wire)
+  ?.  =(/pki-store wire)
     (on-agent:def wire sign)
   ?+  -.sign  (on-agent:def wire sign)
       ::

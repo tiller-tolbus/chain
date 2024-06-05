@@ -42,7 +42,7 @@ $:  %0
     :-  clockstep-watch-card:hd
     ::  dev
     ::  :-  fake-pki-card:hd
-      [pki-watch-card:hd pki-cards:hd]
+    [pki-watch-card:hd pki-cards:hd]
 ::
 ++  on-leave
   |=  =path
@@ -55,13 +55,13 @@ $:  %0
 ++  on-load
   |=  old-state=vase
   ::  dev
-  :::-  :~  ::
+  :-  :~  ::
    ::
     ::[%pass /pki-store %agent [our.bowl %pki-store] %leave ~]
-    ::[%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
+    [%pass /pki-store %agent [our.bowl %pki-store] %watch /pki-diffs]
   ::==  this
  ::  prod
-     :-  ~  this(state !<(state-0 old-state))
+     ==  this(state !<(state-0 old-state))
 ::
 ++  on-watch
   |=  =(pole knot)
@@ -80,11 +80,11 @@ $:  %0
       ::~&  `signature`(sign-vote *vote)
       ::[~ this]
     ?:  ?=(%reset q.vase)   :_  this  nuke-cards:hd
-    ?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
-    ?:  ?=(%print q.vase)
-      =/  his  (bap:hon history)
-      ?~  his  ~&  >>>  "no blocs found"  [~ this]
-      ~&  >>  last-bloc=i.his  [~ this]
+    ::?:  ?=(%sprint q.vase)  :_  this  dbug-cards:hd
+    ::?:  ?=(%print q.vase)
+    ::  =/  his  (bap:hon history)
+    ::  ?~  his  ~&  >>>  "no blocs found"  [~ this]
+    ::  ~&  >>  last-bloc=i.his  [~ this]
     ?:  ?=(%nuke q.vase)
       ?>  =(src.bowl primary)
       ~&  >>>  "nuking state"
@@ -92,6 +92,9 @@ $:  %0
       =.  state  *state-0
       ::  :_  this(robin nodes)  [stop-card:hd fake-pki-card:hd pki-cards:hd]
       :_  this(robin nodes)  [stop-card:hd pki-watch-card:hd pki-cards:hd]
+    ?:  ?=(%remind q.vase)
+      ?>  =(src.bowl our.bowl)
+      :_  this  [bloc-remind-card:hd]~
     ::  todo pause poke?
     ::  actual checks
     ::  throw away unrecognized pokes
@@ -131,8 +134,14 @@ $:  %0
       s=stage.vote
       size=(met 3 (jam [vote quorum]))
     ==
+    ?:  (gth (met 3 (jam +.vote)) (bex 4))
+      ~&  %big-referendum  [~ this]
+    ?:  (gth (met 3 (jam quorum)) max-quorum)
+      ~&  %big-quorum  [~ this]  
+    ?:  (gth (met 3 (jam bloc.vote)) max-bloc)
+      ~&  %big-bloc  [~ this]
     ?:  (lth height.vote height.local)
-      ~&  ["old height" src=height.vote our=height.local]
+      ::~&  ["old height" src=height.vote our=height.local]
       [~ this]
     =/  sigs=(list signature)  ~(tap in quorum)
     |-
@@ -149,10 +158,12 @@ $:  %0
     $(sigs t.sigs, vote-store (~(put ju vote-store) vote sig))
   ++  handle-txn
     |=  =txn
-    ?>  (gte (bex 10) (met 3 (jam txn)))
+    ?>  (gte max-txn (met 3 (jam txn)))
     ::~&  ["received txn" txn]
     ?:  (~(has bi mempool.local) who.txn nonce.txn)
-      ~&  ["duplicate txn" who=who.txn nonce=nonce.txn]  [~ this]
+      ::~&  ["duplicate txn" who=who.txn nonce=nonce.txn]  
+      [~ this]
+    ~&  [%txn-size (met 3 (jam txn))]
     :-  (txn-gossip-cards txn)
     this(mempool.local (~(put bi mempool.local) who.txn nonce.txn txn))
   ++  handle-faucet
@@ -488,17 +499,15 @@ $:  %0
 ++  stop-card
   [%pass /wire %agent [our.bowl %clockstep] %poke [%noun !>(%stop)]]
 ++  nuke-cards
+  ?>  =(src.bowl our.bowl)
   :-  [%give %fact ~[/blocs] bloc-update+!>([%reset ~])]
   %+  turn  nodes  |=  sip=@p
   [%pass /wire %agent [sip %clockwork] %poke [%noun !>(%nuke)]]
 ++  addendum-card  ^-  card :: TODO time this properly
   [%pass /addendum %arvo %b %wait (add now.bowl addendum-delta)]
-++  bloc-fact-card  ^-  card
-  =/  update
-    ::  ?:  (lth ~(wyt by history) 2)
-      history
-     :: (lot:hon history `(sub ~(wyt by history) 2) `~(wyt by history))
-  [%give %fact ~[/blocs] bloc-update+!>([%blocs update])]
+++  bloc-remind-card  ^-  card
+  =/  update  history
+  [%give %fact ~[/blocs] bloc-update+!>([%remind update])]
 ++  txn-gossip-cards
   |=  =txn
   ^-  (list card)
@@ -509,6 +518,6 @@ $:  %0
   ^-  pass
   =/  top  (~(rep in (~(key bi pki-store) ship)) max)
   =/  key  (~(get bi pki-store) ship top)
-  ?~  key  !!
+  ?~  key  0
   u.key
 --
