@@ -230,6 +230,8 @@
   |=  [id=@ta headers=(list [@t @t]) body=@t]
   =/  rath  [/http-response/[id]]~
   =/  page  (as-octs:mimes:html body)
+  =?  headers  !(~(has by (malt headers)) 'content-type')
+    [['content-type' 'text/html'] headers]
   =/  status  (slav %ud (~(gut by (malt headers)) 'X-Status' '200'))
   :~
       [%give %fact rath %http-response-header !>([status headers])]
